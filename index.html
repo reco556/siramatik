@@ -79,7 +79,7 @@
     }
 
     h1 { color: #38bdf8; margin-bottom: 2px; font-size: 1rem; flex-shrink: 0; }
-    body.tv-mode h1 { font-size: 1.4rem; }
+    body.tv-mode h1 { font-size: 1.2rem; }
 
     .queue-container {
       display: flex;
@@ -116,7 +116,7 @@
     /* Kontrol Paneli Elemanları */
     input, select, button {
       width: 100%;
-      padding: 5px 7px;
+      padding: 6px 8px;
       font-size: 0.8rem;
       border-radius: 5px;
       border: none;
@@ -215,19 +215,19 @@
     <div class="control-top">
       <h2 style="color:#38bdf8; font-size:1rem;">Personel Paneli</h2>
 
-      <button class="btn-tv" type="button" id="btnOpenTV">📺 TV Ekranını Ayrı Pencerede Aç</button>
+      <button class="btn-tv" type="button" onclick="openTVWindow()">📺 TV Ekranını Ayrı Pencerede Aç</button>
       
       <div style="background: #0f172a; padding: 5px; border-radius: 5px; border: 1px solid #334155;">
         <label style="font-size: 0.65rem; color: #cbd5e1; display: block; margin-bottom: 1px;">🏷️ 1. Ekran Başlığı:</label>
         <input type="text" id="customTitle1Input" placeholder="1. Hat Başlığı">
         <label style="font-size: 0.65rem; color: #cbd5e1; display: block; margin-top: 2px; margin-bottom: 1px;">🏷️ 2. Ekran Başlığı:</label>
         <input type="text" id="customTitle2Input" placeholder="2. Hat Başlığı">
-        <button class="btn-title" type="button" id="btnUpdateTitles">Başlıkları Güncelle</button>
+        <button class="btn-title" type="button" onclick="updateTitles()">Başlıkları Güncelle</button>
       </div>
 
       <div class="excel-box">
         <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-bottom: 1px;">📊 Excel'den Toplu Liste Yükle</label>
-        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" onchange="readExcelFile(this)">
       </div>
 
       <input type="hidden" id="editId" value="">
@@ -266,8 +266,8 @@
       </div>
 
       <div style="display: flex; gap: 4px;">
-        <button id="saveBtn" type="button" style="flex: 2;">Listeye Ekle</button>
-        <button id="cancelEditBtn" type="button" style="background: #64748b; display: none; flex: 1;">İptal</button>
+        <button id="saveBtn" type="button" onclick="savePerson()" style="flex: 2;">Listeye Ekle</button>
+        <button id="cancelEditBtn" type="button" onclick="cancelEdit()" style="background: #64748b; display: none; flex: 1;">İptal</button>
       </div>
     </div>
 
@@ -275,12 +275,12 @@
     <div class="control-bottom">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
         <h2 style="font-size: 0.9rem; margin: 0; color:#38bdf8;">Sıradakiler (<span id="totalCount">0</span>)</h2>
-        <button class="btn-clear-all" type="button" id="btnClearAll">🗑️ Tümünü Sil</button>
+        <button class="btn-clear-all" type="button" onclick="clearAllList()">🗑️ Tümünü Sil</button>
       </div>
       <div class="waiting-list-small" id="miniList"></div>
     </div>
 
-    <button class="btn-call" type="button" id="btnCallSelected">Seçilenleri Çağır 🔔</button>
+    <button class="btn-call" type="button" onclick="callSelected()">Seçilenleri Çağır 🔔</button>
   </div>
 
   <audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
@@ -354,141 +354,6 @@
       renderUI();
     }
 
-    function renderUI() {
-      const qList1 = document.getElementById('queueList1');
-      const qList2 = document.getElementById('queueList2');
-      const miniListElement = document.getElementById('miniList');
-      const totalCount = document.getElementById('totalCount');
-      
-      if (!qList1 || !qList2) return;
-
-      qList1.innerHTML = '';
-      qList2.innerHTML = '';
-      if (miniListElement) miniListElement.innerHTML = '';
-      if (totalCount) totalCount.textContent = queue.length;
-
-      // 1. Hat Çağrılanlar
-      const calledList1 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '1');
-      calledList1.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
-
-      if (calledList1.length === 0) {
-        qList1.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
-      } else {
-        calledList1.forEach((item, index) => {
-          const card = document.createElement('div');
-          card.className = `queue-card ${index === 0 ? 'active' : ''}`;
-          const flag = getFlagEmoji(item.ulke);
-          card.innerHTML = `
-            <div class="rank">${index + 1}.</div>
-            <div class="name-area">
-              <span class="flag">${flag}</span>
-              <span>${item.isim}</span>
-            </div>
-            <div class="status">${item.banko || 'Banko 1'}</div>
-          `;
-          qList1.appendChild(card);
-        });
-      }
-
-      // 2. Hat Çağrılanlar
-      const calledList2 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '2');
-      calledList2.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
-
-      if (calledList2.length === 0) {
-        qList2.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
-      } else {
-        calledList2.forEach((item, index) => {
-          const card = document.createElement('div');
-          card.className = `queue-card ${index === 0 ? 'active' : ''}`;
-          const flag = getFlagEmoji(item.ulke);
-          card.innerHTML = `
-            <div class="rank">${index + 1}.</div>
-            <div class="name-area">
-              <span class="flag">${flag}</span>
-              <span>${item.isim}</span>
-            </div>
-            <div class="status">${item.banko || 'Banko 1'}</div>
-          `;
-          qList2.appendChild(card);
-        });
-      }
-
-      // Sağ Liste
-      if (miniListElement) {
-        if (queue.length === 0) {
-          miniListElement.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
-        } else {
-          queue.forEach((item) => {
-            const mini = document.createElement('div');
-            mini.className = 'mini-card';
-            const flag = getFlagEmoji(item.ulke);
-            const isCalled = item.status === 'Çağrıldı';
-            const groupText = `[Hat ${item.matchGroup || 1} - ${item.banko || 'Banko 1'}]`;
-
-            mini.innerHTML = `
-              <div class="mini-left">
-                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 13px; height: 13px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
-                <span style="font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
-                  ${flag} ${item.isim} <span style="opacity:0.7; font-size:0.55rem;">${groupText}</span>
-                </span>
-              </div>
-              <div class="action-btns">
-                <button class="btn-edit" type="button" data-edit-id="${item.id}">Düzenle</button>
-                <button class="btn-delete" type="button" data-delete-id="${item.id}">Sil</button>
-              </div>
-            `;
-            miniListElement.appendChild(mini);
-          });
-        }
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      renderTitles();
-      renderUI();
-
-      // Başlık Güncelleme
-      const btnUpdateTitles = document.getElementById('btnUpdateTitles');
-      if (btnUpdateTitles) {
-        btnUpdateTitles.addEventListener('click', () => {
-          const t1 = document.getElementById('customTitle1Input').value.trim();
-          const t2 = document.getElementById('customTitle2Input').value.trim();
-          if (t1) localStorage.setItem('siramatik_title_1', t1);
-          if (t2) localStorage.setItem('siramatik_title_2', t2);
-          renderTitles();
-        });
-      }
-
-      // TV Penceresi Açma (Güvenli Yol)
-      const btnOpenTV = document.getElementById('btnOpenTV');
-      if (btnOpenTV) {
-        btnOpenTV.addEventListener('click', () => {
-          const currentUrl = window.location.href.split('?')[0];
-          const tvUrl = currentUrl + '?tv=true';
-          window.open(tvUrl, '_blank', 'width=1280,height=900,scrollbars=yes,resizable=yes');
-        });
-      }
-
-      // Tümünü Temizle
-      const btnClearAll = document.getElementById('btnClearAll');
-      if (btnClearAll) {
-        btnClearAll.addEventListener('click', () => {
-          if (queue.length === 0) return alert("Liste zaten boş!");
-          if (confirm("Listedeki tüm kişiler tamamen silinecek. Emin misiniz?")) {
-            queue = [];
-            saveData(true);
-          }
-        });
-      }
-
-      // Listeye Ekle / Güncelle
-      const saveBtn = document.getElementById('saveBtn');
-      if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
-          const editId = document.getElementById('editId').value;
-          const nameInput = document.getElementById('personName');
-          const countrySelect = document.getElementById('countrySelect');
-          const matchSelect = document.getElementById('matchSelect');
-          const counterInput = document.getElementById('counterName');
-          
-          const val =
+    function openTVWindow() {
+      const baseUrl = window.location.href.split('?')[0];
+      window.open
