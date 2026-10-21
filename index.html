@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Profesyonel Sıramatik ve Çift Hat Barko Ekranı</title>
   <!-- Excel kütüphanesi -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="console.warn('Excel kütüphanesi yüklenemedi.')"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -79,9 +79,8 @@
     }
 
     h1 { color: #38bdf8; margin-bottom: 2px; font-size: 1rem; flex-shrink: 0; }
-    body.tv-mode h1 { font-size: 1.2rem; }
+    body.tv-mode h1 { font-size: 1.4rem; }
 
-    /* 10+ İsmi Ekranın Boyuna Göre Esnetip Sığdıran Konteyner */
     .queue-container {
       display: flex;
       flex-direction: column;
@@ -92,15 +91,14 @@
       overflow-y: auto;
     }
 
-    /* Ultra Kompakt Kart Tasarımı */
     .queue-card {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: #0f172a;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 4px;
-      border-left: 3px solid #64748b;
+      border-left: 4px solid #64748b;
       min-height: 28px;
       flex-shrink: 0;
     }
@@ -336,3 +334,161 @@
       const title2 = localStorage.getItem('siramatik_title_2') || '2. MÜSABAKA / HAT EKRANI';
       
       const t1Elem = document.getElementById('screenTitle1Text');
+      const t2Elem = document.getElementById('screenTitle2Text');
+      if (t1Elem) t1Elem.textContent = title1;
+      if (t2Elem) t2Elem.textContent = title2;
+
+      const i1 = document.getElementById('customTitle1Input');
+      const i2 = document.getElementById('customTitle2Input');
+      if (i1 && document.activeElement !== i1) i1.value = title1;
+      if (i2 && document.activeElement !== i2) i2.value = title2;
+    }
+
+    function saveData(triggerSound = false) {
+      try {
+        localStorage.setItem('siramatik_queue_dual', JSON.stringify(queue));
+        if (triggerSound) {
+          localStorage.setItem('siramatik_play_sound_dual', Date.now().toString());
+        }
+      } catch(e) {}
+      renderUI();
+    }
+
+    function renderUI() {
+      const qList1 = document.getElementById('queueList1');
+      const qList2 = document.getElementById('queueList2');
+      const miniListElement = document.getElementById('miniList');
+      const totalCount = document.getElementById('totalCount');
+      
+      if (!qList1 || !qList2) return;
+
+      qList1.innerHTML = '';
+      qList2.innerHTML = '';
+      if (miniListElement) miniListElement.innerHTML = '';
+      if (totalCount) totalCount.textContent = queue.length;
+
+      // 1. Hat Çağrılanlar
+      const calledList1 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '1');
+      calledList1.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
+
+      if (calledList1.length === 0) {
+        qList1.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
+      } else {
+        calledList1.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = `queue-card ${index === 0 ? 'active' : ''}`;
+          const flag = getFlagEmoji(item.ulke);
+          card.innerHTML = `
+            <div class="rank">${index + 1}.</div>
+            <div class="name-area">
+              <span class="flag">${flag}</span>
+              <span>${item.isim}</span>
+            </div>
+            <div class="status">${item.banko || 'Banko 1'}</div>
+          `;
+          qList1.appendChild(card);
+        });
+      }
+
+      // 2. Hat Çağrılanlar
+      const calledList2 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '2');
+      calledList2.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
+
+      if (calledList2.length === 0) {
+        qList2.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
+      } else {
+        calledList2.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = `queue-card ${index === 0 ? 'active' : ''}`;
+          const flag = getFlagEmoji(item.ulke);
+          card.innerHTML = `
+            <div class="rank">${index + 1}.</div>
+            <div class="name-area">
+              <span class="flag">${flag}</span>
+              <span>${item.isim}</span>
+            </div>
+            <div class="status">${item.banko || 'Banko 1'}</div>
+          `;
+          qList2.appendChild(card);
+        });
+      }
+
+      // Sağ Liste
+      if (miniListElement) {
+        if (queue.length === 0) {
+          miniListElement.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
+        } else {
+          queue.forEach((item) => {
+            const mini = document.createElement('div');
+            mini.className = 'mini-card';
+            const flag = getFlagEmoji(item.ulke);
+            const isCalled = item.status === 'Çağrıldı';
+            const groupText = `[Hat ${item.matchGroup || 1} - ${item.banko || 'Banko 1'}]`;
+
+            mini.innerHTML = `
+              <div class="mini-left">
+                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 13px; height: 13px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
+                <span style="font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
+                  ${flag} ${item.isim} <span style="opacity:0.7; font-size:0.55rem;">${groupText}</span>
+                </span>
+              </div>
+              <div class="action-btns">
+                <button class="btn-edit" type="button" data-edit-id="${item.id}">Düzenle</button>
+                <button class="btn-delete" type="button" data-delete-id="${item.id}">Sil</button>
+              </div>
+            `;
+            miniListElement.appendChild(mini);
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTitles();
+      renderUI();
+
+      // Başlık Güncelleme
+      const btnUpdateTitles = document.getElementById('btnUpdateTitles');
+      if (btnUpdateTitles) {
+        btnUpdateTitles.addEventListener('click', () => {
+          const t1 = document.getElementById('customTitle1Input').value.trim();
+          const t2 = document.getElementById('customTitle2Input').value.trim();
+          if (t1) localStorage.setItem('siramatik_title_1', t1);
+          if (t2) localStorage.setItem('siramatik_title_2', t2);
+          renderTitles();
+        });
+      }
+
+      // TV Penceresi Açma (Güvenli Yol)
+      const btnOpenTV = document.getElementById('btnOpenTV');
+      if (btnOpenTV) {
+        btnOpenTV.addEventListener('click', () => {
+          const currentUrl = window.location.href.split('?')[0];
+          const tvUrl = currentUrl + '?tv=true';
+          window.open(tvUrl, '_blank', 'width=1280,height=900,scrollbars=yes,resizable=yes');
+        });
+      }
+
+      // Tümünü Temizle
+      const btnClearAll = document.getElementById('btnClearAll');
+      if (btnClearAll) {
+        btnClearAll.addEventListener('click', () => {
+          if (queue.length === 0) return alert("Liste zaten boş!");
+          if (confirm("Listedeki tüm kişiler tamamen silinecek. Emin misiniz?")) {
+            queue = [];
+            saveData(true);
+          }
+        });
+      }
+
+      // Listeye Ekle / Güncelle
+      const saveBtn = document.getElementById('saveBtn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+          const editId = document.getElementById('editId').value;
+          const nameInput = document.getElementById('personName');
+          const countrySelect = document.getElementById('countrySelect');
+          const matchSelect = document.getElementById('matchSelect');
+          const counterInput = document.getElementById('counterName');
+          
+          const val =
