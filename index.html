@@ -185,7 +185,6 @@
     let queue = JSON.parse(localStorage.getItem('siramatik_queue')) || [];
     const dingSound = document.getElementById('dingSound');
 
-    // Ülke Kodunu Emojik Bayrağa Çevirme Fonksiyonu
     function getFlagEmoji(countryCode) {
       if (!countryCode) return '🏳️';
       const code = countryCode.toUpperCase();
@@ -214,7 +213,7 @@
       if (!nameInput.value.trim()) return alert("Lütfen bir isim girin!");
 
       queue.push({
-        id: Date.now() + Math.random(),
+        id: String(Date.now() + Math.random()),
         isim: nameInput.value,
         ulke: countrySelect.value,
         banko: counterInput.value,
@@ -225,7 +224,6 @@
       saveData();
     }
 
-    // Excel Dosyasını Okuma Fonksiyonu
     function handleExcelUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -236,18 +234,15 @@
         const workbook = XLSX.read(data, { type: 'array' });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        
-        // JSON formatına dönüştür (İlk satır başlık kabul edilir)
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
         jsonData.forEach(row => {
-          // Excel sütun adları: İsim (veya Ad), Ülke (veya UlkeCode)
           const isim = row.İsim || row.Ad || row.Name || row[Object.keys(row)[0]];
           const ulke = row.Ülke || row.Ulke || row.Country || "TR";
 
           if (isim) {
             queue.push({
-              id: Date.now() + Math.random(),
+              id: String(Date.now() + Math.random()),
               isim: String(isim),
               ulke: String(ulke).trim().toUpperCase(),
               banko: "Banko 1",
@@ -275,8 +270,10 @@
       saveData();
     }
 
+    // Düzeltilen Silme Fonksiyonu
     function removePerson(id) {
-      queue = queue.filter(item => item.id !== id);
+      // String dönüşümü ile güvenli karşılaştırma sağlanarak silme yapılıyor
+      queue = queue.filter(item => String(item.id) !== String(id));
       saveData();
     }
 
@@ -293,7 +290,6 @@
         queueListElement.innerHTML = "<p style='font-size: 1.5rem; opacity: 0.6;'>Şu an bekleyen kimse yok.</p>";
       }
 
-      // Barko Ekranı İçin Sadece İlk 6 Kişi
       const top6 = queue.slice(0, 6);
       top6.forEach((item, index) => {
         const card = document.createElement('div');
@@ -307,12 +303,11 @@
             <span class="flag">${flag}</span>
             <span>${item.isim}</span>
           </div>
-          <div class="status">${isActive ? item.banko + ' (Çağrıldı)' : 'Bekliyor'}</div>
+          <div class="status">${isActive ? item.banko + ' (Çağrıldı)' : 'Bekliyer'}</div>
         `;
         queueListElement.appendChild(card);
       });
 
-      // Sağ Taraftaki Yönetim Listesi
       queue.forEach((item) => {
         const mini = document.createElement('div');
         mini.className = 'mini-card';
