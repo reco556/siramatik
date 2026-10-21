@@ -39,7 +39,7 @@
       overflow-y: auto;
     }
 
-    /* Sağ Taraf: Personel / Kontrol Paneli (%35) - Düzeltilmiş Kaydırma Alanı */
+    /* Sağ Taraf: Personel / Kontrol Paneli (%35) */
     .control-side {
       flex: 3.5;
       background: #1e293b;
@@ -48,21 +48,21 @@
       flex-direction: column;
       gap: 10px;
       height: 100vh;
-      overflow: hidden; /* Dış taşmayı engelle */
+      overflow: hidden;
     }
 
     .control-top {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      flex-shrink: 0; /* Üst kısımların küçülmesini engelle */
+      flex-shrink: 0;
     }
 
     .control-bottom {
       display: flex;
       flex-direction: column;
       flex-grow: 1;
-      overflow: hidden; /* Sadece liste alanının kaymasını sağla */
+      overflow: hidden;
       gap: 8px;
     }
 
@@ -155,7 +155,6 @@
       background: #0f172a;
     }
 
-    /* Sıradakiler Listesi Artık Kendi İçinde Kaydırılabilir */
     .waiting-list-small {
       display: flex;
       flex-direction: column;
@@ -222,6 +221,7 @@
       <div class="excel-box">
         <label style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 2px;">📊 Excel'den Toplu Liste Yükle</label>
         <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+        <small style="font-size: 0.65rem; opacity: 0.7;">(Sütunlar: İsim, Ülke, Hat, Banko)</small>
       </div>
 
       <input type="hidden" id="editId" value="">
@@ -265,7 +265,7 @@
       </div>
     </div>
 
-    <!-- Kontrol Alt Kısım (Sadece bu alan aşağı kayar) -->
+    <!-- Kontrol Alt Kısım -->
     <div class="control-bottom">
       <h2 style="font-size: 1.1rem; margin-top: 5px;">Sıradakiler (<span id="totalCount">0</span>)</h2>
       <div class="waiting-list-small" id="miniList"></div>
@@ -375,7 +375,7 @@
               <span class="flag">${flag}</span>
               <span>${item.isim}</span>
             </div>
-            <div class="status">${item.banko} (Çağrıldı)</div>
+            <div class="status">${item.banko || 'Banko 1'} (Çağrıldı)</div>
           `;
           qList1.appendChild(card);
         });
@@ -398,13 +398,13 @@
               <span class="flag">${flag}</span>
               <span>${item.isim}</span>
             </div>
-            <div class="status">${item.banko} (Çağrıldı)</div>
+            <div class="status">${item.banko || 'Banko 1'} (Çağrıldı)</div>
           `;
           qList2.appendChild(card);
         });
       }
 
-      // Sağ Liste (Kaydırılabilir Alan)
+      // Sağ Liste
       if (miniListElement) {
         if (queue.length === 0) {
           miniListElement.innerHTML = "<p style='font-size: 0.85rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
@@ -414,13 +414,13 @@
             mini.className = 'mini-card';
             const flag = getFlagEmoji(item.ulke);
             const isCalled = item.status === 'Çağrıldı';
-            const groupText = `[Hat ${item.matchGroup || 1}]`;
+            const groupText = `[Hat ${item.matchGroup || 1} - ${item.banko || 'Banko 1'}]`;
 
             mini.innerHTML = `
               <div class="mini-left">
                 <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 15px; height: 15px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
                 <span style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
-                  ${flag} ${item.isim} <span style="opacity:0.7; font-size:0.7rem;">${groupText}</span>
+                  ${flag} ${item.isim} <span style="opacity:0.7; font-size:0.65rem;">${groupText}</span>
                 </span>
               </div>
               <div class="action-btns">
@@ -434,7 +434,6 @@
       }
     }
 
-    // Olay Dinleyicileri
     document.addEventListener('DOMContentLoaded', () => {
       renderTitles();
       renderUI();
@@ -468,7 +467,7 @@
             queue[index].isim = val;
             queue[index].ulke = countrySelect.value;
             queue[index].matchGroup = matchSelect.value;
-            queue[index].banko = counterInput.value;
+            queue[index].banko = counterInput.value.trim() || 'Banko 1';
           }
           document.getElementById('editId').value = '';
           document.getElementById('saveBtn').textContent = 'Listeye Ekle';
@@ -480,7 +479,7 @@
             isim: val,
             ulke: countrySelect.value,
             matchGroup: matchSelect.value,
-            banko: counterInput.value,
+            banko: counterInput.value.trim() || 'Banko 1',
             status: 'Bekliyor',
             calledAt: 0
           });
@@ -546,6 +545,7 @@
         }
       });
 
+      // Gelişmiş Excel Yükleme (İsim, Ülke, Hat, Banko sütunlarını otomatik tanır)
       document.getElementById('excelFile').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -565,10 +565,12 @@
               const nameKey = keys.find(k => /İsim|Isim|Ad|Name/i.test(k)) || keys[0];
               const countryKey = keys.find(k => /Ülke|Ulke|Country|Bayrak|Flag/i.test(k));
               const matchKey = keys.find(k => /Müsabaka|Musabaka|Hat|Group|Match/i.test(k));
+              const counterKey = keys.find(k => /Banko|Oda|Masa|Desk|Room/i.test(k));
 
               const isim = row[nameKey];
               const rawUlke = countryKey ? row[countryKey] : "TR";
               const rawHat = matchKey ? row[matchKey] : "1";
+              const rawBanko = counterKey ? row[counterKey] : "Banko 1";
 
               if (isim) {
                 queue.push({
@@ -576,7 +578,7 @@
                   isim: String(isim).trim(),
                   ulke: normalizeCountryCode(rawUlke),
                   matchGroup: String(rawHat).trim() === "2" ? "2" : "1",
-                  banko: "Banko 1",
+                  banko: String(rawBanko).trim() || "Banko 1",
                   status: 'Bekliyor',
                   calledAt: 0
                 });
