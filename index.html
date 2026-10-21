@@ -109,6 +109,9 @@
     .btn-tv { background: #8b5cf6; font-size: 0.9rem; }
     .btn-tv:hover { background: #7c3aed; }
 
+    .btn-title { background: #0284c7; font-size: 0.85rem; padding: 6px; margin-top: 5px; }
+    .btn-title:hover { background: #0369a1; }
+
     .btn-delete { background: #ef4444; padding: 5px 8px; font-size: 0.75rem; width: auto; }
     .btn-edit { background: #f59e0b; padding: 5px 8px; font-size: 0.75rem; width: auto; color: white; }
     .btn-edit:hover { background: #d97706; }
@@ -152,7 +155,7 @@
 
   <!-- BARKO / TV EKRANI (SOL) -->
   <div class="display-side">
-    <h1>ÇAĞRILANLAR EKRANI</h1>
+    <h1 id="screenTitleText">ÇAĞRILANLAR EKRANI</h1>
     <div class="queue-container" id="queueList">
       <!-- Çağrılanlar buraya gelecek -->
     </div>
@@ -165,6 +168,13 @@
     <!-- TV Ekranını Ayrı Pencerede Aç Butonu -->
     <button class="btn-tv" onclick="openTVWindow()">📺 TV Ekranını Ayrı Pencerede Aç</button>
     
+    <!-- Başlık Değiştirme Alanı -->
+    <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155;">
+      <label style="font-size: 0.85rem; color: #cbd5e1; display: block; margin-bottom: 4px;">🏷️ Ekran Başlığını Değiştir:</label>
+      <input type="text" id="customTitleInput" placeholder="Örn: BEKLEME LİSTESİ / MÜSABAKA SIRASI">
+      <button class="btn-title" onclick="updateTitle()">Başlığı Güncelle</button>
+    </div>
+
     <!-- Excel Yükleme Alanı -->
     <div class="excel-box">
       <label style="font-size: 0.9rem; color: #cbd5e1; display: block; margin-bottom: 5px;">📊 Excel'den Toplu Liste Yükle</label>
@@ -240,10 +250,27 @@
       );
     }
 
-    // Ayrı Pencerede Sadece Barko Ekranını Açma
     function openTVWindow() {
       const tvUrl = window.location.href.split('?')[0] + '?tv=true';
       window.open(tvUrl, 'TVEkrani', 'width=1280,height=720');
+    }
+
+    // Ekran Başlığını Güncelleme
+    function updateTitle() {
+      const newTitle = document.getElementById('customTitleInput').value.trim();
+      if (!newTitle) return alert("Lütfen geçerli bir başlık girin!");
+
+      localStorage.setItem('siramatik_title', newTitle);
+      renderTitle();
+    }
+
+    function renderTitle() {
+      const savedTitle = localStorage.getItem('siramatik_title') || 'ÇAĞRILANLAR EKRANI';
+      const titleElem = document.getElementById('screenTitleText');
+      if (titleElem) titleElem.textContent = savedTitle;
+      
+      const inputElem = document.getElementById('customTitleInput');
+      if (inputElem && !inputElem.value) inputElem.value = savedTitle;
     }
 
     // Sekmeler ve Pencereler Arası Canlı Senkronizasyon
@@ -253,6 +280,9 @@
           queue = JSON.parse(e.newValue) || [];
           renderUI();
         } catch(err) {}
+      }
+      if (e.key === 'siramatik_title') {
+        renderTitle();
       }
       if (e.key === 'siramatik_play_sound' && isTVMode) {
         dingSound.currentTime = 0;
@@ -395,7 +425,7 @@
       if (updated) {
         dingSound.currentTime = 0;
         dingSound.play().catch(e => console.log("Ses çalma engeli"));
-        saveData(true); // Diğer pencerelerde de sesi tetikler
+        saveData(true);
       }
     }
 
@@ -405,70 +435,4 @@
     }
 
     function renderUI() {
-      const queueListElement = document.getElementById('queueList');
-      const miniListElement = document.getElementById('miniList');
-      const totalCount = document.getElementById('totalCount');
-      
-      if (!queueListElement) return;
-
-      queueListElement.innerHTML = '';
-      if (miniListElement) miniListElement.innerHTML = '';
-      if (totalCount) totalCount.textContent = queue.length;
-
-      // Sol Ekran (Çağrılanlar)
-      const calledList = queue.filter(item => item.status === 'Çağrıldı');
-      calledList.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
-
-      if (calledList.length === 0) {
-        queueListElement.innerHTML = "<p style='font-size: 1.3rem; opacity: 0.6;'>Şu an çağrılan kimse yok.</p>";
-      } else {
-        const top6Called = calledList.slice(0, 6);
-        top6Called.forEach((item, index) => {
-          const card = document.createElement('div');
-          card.className = `queue-card ${index === 0 ? 'active' : ''}`;
-          const flag = getFlagEmoji(item.ulke);
-          card.innerHTML = `
-            <div class="rank">${index + 1}.</div>
-            <div class="name-area">
-              <span class="flag">${flag}</span>
-              <span>${item.isim}</span>
-            </div>
-            <div class="status">${item.banko} (Çağrıldı)</div>
-          `;
-          queueListElement.appendChild(card);
-        });
-      }
-
-      // Sağ Liste (Sıradakiler)
-      if (miniListElement) {
-        if (queue.length === 0) {
-          miniListElement.innerHTML = "<p style='font-size: 0.9rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
-        } else {
-          queue.forEach((item) => {
-            const mini = document.createElement('div');
-            mini.className = 'mini-card';
-            const flag = getFlagEmoji(item.ulke);
-            const isCalled = item.status === 'Çağrıldı';
-
-            mini.innerHTML = `
-              <div class="mini-left">
-                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 18px; height: 18px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
-                <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
-                  ${flag} ${item.isim}
-                </span>
-              </div>
-              <div class="action-btns">
-                <button class="btn-edit" onclick="editPerson('${item.id}')">Düzenle</button>
-                <button class="btn-delete" onclick="removePerson('${item.id}')">Sil</button>
-              </div>
-            `;
-            miniListElement.appendChild(mini);
-          });
-        }
-      }
-    }
-
-    renderUI();
-  </script>
-</body>
-</html>
+      const
