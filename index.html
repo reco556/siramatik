@@ -166,13 +166,13 @@
     <h2>Personel Paneli</h2>
 
     <!-- TV Ekranını Ayrı Pencerede Aç Butonu -->
-    <button class="btn-tv" onclick="openTVWindow()">📺 TV Ekranını Ayrı Pencerede Aç</button>
+    <button class="btn-tv" type="button" onclick="openTVWindow()">📺 TV Ekranını Ayrı Pencerede Aç</button>
     
     <!-- Başlık Değiştirme Alanı -->
     <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155;">
       <label style="font-size: 0.85rem; color: #cbd5e1; display: block; margin-bottom: 4px;">🏷️ Ekran Başlığını Değiştir:</label>
       <input type="text" id="customTitleInput" placeholder="Örn: BEKLEME LİSTESİ / MÜSABAKA SIRASI">
-      <button class="btn-title" onclick="updateTitle()">Başlığı Güncelle</button>
+      <button class="btn-title" type="button" onclick="updateTitle()">Başlığı Güncelle</button>
     </div>
 
     <!-- Excel Yükleme Alanı -->
@@ -209,22 +209,21 @@
       <input type="text" id="counterName" value="Banko 1">
     </div>
 
-    <button id="saveBtn" onclick="savePerson()">Listeye Ekle</button>
-    <button id="cancelEditBtn" onclick="cancelEdit()" style="background: #64748b; display: none; margin-top: 5px;">Düzenlemeyi İptal Et</button>
+    <button id="saveBtn" type="button" onclick="savePerson()">Listeye Ekle</button>
+    <button id="cancelEditBtn" type="button" onclick="cancelEdit()" style="background: #64748b; display: none; margin-top: 5px;">Düzenlemeyi İptal Et</button>
 
     <hr style="border-color: #334155;">
 
     <h2>Sıradakiler (<span id="totalCount">0</span>)</h2>
     <div class="waiting-list-small" id="miniList"></div>
 
-    <button class="btn-call" onclick="callSelected()">Seçilenleri Çağır 🔔</button>
+    <button class="btn-call" type="button" onclick="callSelected()">Seçilenleri Çağır 🔔</button>
   </div>
 
   <!-- Ses Efekti -->
   <audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
   <script>
-    // URL'de ?tv=true var mı kontrol et
     const urlParams = new URLSearchParams(window.location.search);
     const isTVMode = urlParams.get('tv') === 'true';
 
@@ -251,15 +250,19 @@
     }
 
     function openTVWindow() {
-      const tvUrl = window.location.href.split('?')[0] + '?tv=true';
-      window.open(tvUrl, 'TVEkrani', 'width=1280,height=720');
+      const baseUrl = window.location.href.split('?')[0];
+      const tvUrl = baseUrl + '?tv=true';
+      window.open(tvUrl, '_blank', 'width=1280,height=720,scrollbars=yes,resizable=yes');
     }
 
-    // Ekran Başlığını Güncelleme
     function updateTitle() {
-      const newTitle = document.getElementById('customTitleInput').value.trim();
-      if (!newTitle) return alert("Lütfen geçerli bir başlık girin!");
-
+      const input = document.getElementById('customTitleInput');
+      if (!input) return;
+      const newTitle = input.value.trim();
+      if (!newTitle) {
+        alert("Lütfen geçerli bir başlık girin!");
+        return;
+      }
       localStorage.setItem('siramatik_title', newTitle);
       renderTitle();
     }
@@ -270,10 +273,11 @@
       if (titleElem) titleElem.textContent = savedTitle;
       
       const inputElem = document.getElementById('customTitleInput');
-      if (inputElem && !inputElem.value) inputElem.value = savedTitle;
+      if (inputElem && document.activeElement !== inputElem) {
+        inputElem.value = savedTitle;
+      }
     }
 
-    // Sekmeler ve Pencereler Arası Canlı Senkronizasyon
     window.addEventListener('storage', (e) => {
       if (e.key === 'siramatik_queue') {
         try {
@@ -286,7 +290,7 @@
       }
       if (e.key === 'siramatik_play_sound' && isTVMode) {
         dingSound.currentTime = 0;
-        dingSound.play().catch(e => console.log("Ses oynatma izni bekleniyor"));
+        dingSound.play().catch(e => console.log("Ses çalma izni bekleniyor"));
       }
     });
 
@@ -294,7 +298,7 @@
       try {
         localStorage.setItem('siramatik_queue', JSON.stringify(queue));
         if (triggerSound) {
-          localStorage.setItem('siramatik_play_sound', Date.now());
+          localStorage.setItem('siramatik_play_sound', Date.now().toString());
         }
       } catch(e) {}
       renderUI();
@@ -306,6 +310,7 @@
       const countrySelect = document.getElementById('countrySelect');
       const counterInput = document.getElementById('counterName');
       
+      if (!nameInput) return;
       const val = nameInput.value.trim();
       if (!val) {
         alert("Lütfen bir isim girin!");
@@ -417,22 +422,4 @@
         const item = queue.find(i => String(i.id) === String(id));
         if (item && item.status !== 'Çağrıldı') {
           item.status = 'Çağrıldı';
-          item.calledAt = timestamp + index;
-          updated = true;
-        }
-      });
-
-      if (updated) {
-        dingSound.currentTime = 0;
-        dingSound.play().catch(e => console.log("Ses çalma engeli"));
-        saveData(true);
-      }
-    }
-
-    function removePerson(id) {
-      queue = queue.filter(item => String(item.id) !== String(id));
-      saveData();
-    }
-
-    function renderUI() {
-      const
+          item.calledAt = timestamp
