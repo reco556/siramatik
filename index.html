@@ -16,13 +16,13 @@
       overflow: hidden;
     }
 
-    /* Sol Taraf: Çift Barko / TV Ekranı (%65) */
+    /* Sol Taraf: Çift Barko / TV Ekranı (%65) - 10+ İsim Sığacak Şekilde Kompakt */
     .display-side {
       flex: 6.5;
-      padding: 20px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
       border-right: 2px solid #334155;
       overflow-y: auto;
     }
@@ -32,10 +32,10 @@
       display: flex;
       flex-direction: column;
       background: #1e293b;
-      padding: 15px 20px;
-      border-radius: 12px;
+      padding: 12px 15px;
+      border-radius: 10px;
       border: 1px solid #334155;
-      min-height: 45%;
+      min-height: 48%;
       overflow-y: auto;
     }
 
@@ -54,7 +54,7 @@
     .control-top {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
     }
 
@@ -63,7 +63,7 @@
       flex-direction: column;
       flex-grow: 1;
       overflow: hidden;
-      gap: 8px;
+      gap: 6px;
     }
 
     /* Yalnızca TV Penceresi Modu */
@@ -73,47 +73,47 @@
     body.tv-mode .display-side {
       flex: 100% !important;
       border-right: none !important;
-      padding: 25px !important;
-      gap: 20px !important;
+      padding: 20px !important;
+      gap: 15px !important;
     }
 
-    h1, h2 { color: #38bdf8; margin-bottom: 2px; font-size: 1.2rem; }
-    body.tv-mode h1 { font-size: 1.6rem; }
+    h1, h2 { color: #38bdf8; margin-bottom: 2px; font-size: 1.1rem; }
+    body.tv-mode h1 { font-size: 1.4rem; }
 
     .queue-container {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 5px;
+      margin-top: 6px;
     }
 
+    /* 10+ İsmi Rahatça Sığdıran Kompakt Kart Tasarımı */
     .queue-card {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: #0f172a;
-      padding: 8px 16px;
-      border-radius: 8px;
-      border-left: 5px solid #64748b;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      padding: 5px 12px;
+      border-radius: 6px;
+      border-left: 4px solid #64748b;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
     .queue-card.active {
       background: #0284c7;
       border-left-color: #4ade80;
-      transform: scale(1.005);
     }
 
-    .rank { font-size: 1.2rem; font-weight: bold; width: 35px; opacity: 0.8; color: #38bdf8; }
-    .name-area { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 700; flex-grow: 1; }
-    .flag { font-size: 1.6rem; }
-    .status { font-size: 1rem; background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 6px; }
+    .rank { font-size: 1rem; font-weight: bold; width: 30px; opacity: 0.8; color: #38bdf8; }
+    .name-area { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 700; flex-grow: 1; }
+    .flag { font-size: 1.2rem; }
+    .status { font-size: 0.85rem; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 4px; }
 
     /* Kontrol Paneli Elemanları */
     input, select, button {
       width: 100%;
-      padding: 7px 10px;
-      font-size: 0.9rem;
+      padding: 6px 8px;
+      font-size: 0.85rem;
       border-radius: 6px;
       border: none;
       outline: none;
@@ -137,22 +137,22 @@
     .btn-call { background: #3b82f6; margin-top: 4px; flex-shrink: 0; }
     .btn-call:hover { background: #2563eb; }
     
-    .btn-tv { background: #8b5cf6; font-size: 0.85rem; }
+    .btn-tv { background: #8b5cf6; font-size: 0.8rem; }
     .btn-tv:hover { background: #7c3aed; }
 
-    .btn-title { background: #0284c7; font-size: 0.8rem; padding: 5px; margin-top: 4px; }
+    .btn-title { background: #0284c7; font-size: 0.75rem; padding: 4px; margin-top: 3px; }
     .btn-title:hover { background: #0369a1; }
 
-    .btn-clear-all { background: #ef4444; font-size: 0.8rem; padding: 5px; margin-top: 2px; }
+    .btn-clear-all { background: #ef4444; font-size: 0.75rem; padding: 4px; }
     .btn-clear-all:hover { background: #dc2626; }
 
-    .btn-delete { background: #ef4444; padding: 3px 6px; font-size: 0.7rem; width: auto; }
-    .btn-edit { background: #f59e0b; padding: 3px 6px; font-size: 0.7rem; width: auto; color: white; }
+    .btn-delete { background: #ef4444; padding: 2px 5px; font-size: 0.65rem; width: auto; }
+    .btn-edit { background: #f59e0b; padding: 2px 5px; font-size: 0.65rem; width: auto; color: white; }
     .btn-edit:hover { background: #d97706; }
     
     .excel-box {
       border: 1px dashed #475569;
-      padding: 8px;
+      padding: 6px;
       text-align: center;
       border-radius: 6px;
       background: #0f172a;
@@ -161,19 +161,19 @@
     .waiting-list-small {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
       overflow-y: auto;
       flex-grow: 1;
       background: #0f172a;
-      padding: 8px;
-      border-radius: 8px;
+      padding: 6px;
+      border-radius: 6px;
       border: 1px solid #334155;
     }
 
     .mini-card {
       background: #1e293b;
-      padding: 6px 10px;
-      border-radius: 6px;
+      padding: 5px 8px;
+      border-radius: 5px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -182,18 +182,18 @@
     .mini-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       overflow: hidden;
     }
     .action-btns {
       display: flex;
-      gap: 4px;
+      gap: 3px;
     }
   </style>
 </head>
 <body>
 
-  <!-- SOL TARAF: İKİ AYRI MÜSABAKA/HAT TV EKRANI -->
+  <!-- SOL TARAF: ÇİFT MÜSABAKA/HAT TV EKRANI -->
   <div class="display-side">
     <div class="display-section">
       <h1 id="screenTitle1Text">1. MÜSABAKA / HAT EKRANI</h1>
@@ -213,30 +213,29 @@
 
       <button class="btn-tv" type="button" id="btnOpenTV">📺 TV Ekranını Ayrı Pencerede Aç</button>
       
-      <div style="background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #334155;">
-        <label style="font-size: 0.75rem; color: #cbd5e1; display: block; margin-bottom: 2px;">🏷️ 1. Ekran Başlığı:</label>
+      <div style="background: #0f172a; padding: 6px; border-radius: 6px; border: 1px solid #334155;">
+        <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-bottom: 2px;">🏷️ 1. Ekran Başlığı:</label>
         <input type="text" id="customTitle1Input" placeholder="1. Hat Başlığı">
-        <label style="font-size: 0.75rem; color: #cbd5e1; display: block; margin-top: 4px; margin-bottom: 2px;">🏷️ 2. Ekran Başlığı:</label>
+        <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-top: 3px; margin-bottom: 2px;">🏷️ 2. Ekran Başlığı:</label>
         <input type="text" id="customTitle2Input" placeholder="2. Hat Başlığı">
         <button class="btn-title" type="button" id="btnUpdateTitles">Başlıkları Güncelle</button>
       </div>
 
       <div class="excel-box">
-        <label style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 2px;">📊 Excel'den Toplu Liste Yükle</label>
+        <label style="font-size: 0.75rem; color: #cbd5e1; display: block; margin-bottom: 2px;">📊 Excel'den Toplu Liste Yükle</label>
         <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
-        <small style="font-size: 0.65rem; opacity: 0.7;">(Sütunlar: İsim, Ülke, Hat, Banko)</small>
       </div>
 
       <input type="hidden" id="editId" value="">
 
       <div>
-        <label style="font-size:0.85rem;">Kişi / Ad Soyad:</label>
+        <label style="font-size:0.8rem;">Kişi / Ad Soyad:</label>
         <input type="text" id="personName" placeholder="Örn: Ahmet Yılmaz">
       </div>
 
       <div style="display: flex; gap: 6px;">
         <div style="flex: 1;">
-          <label style="font-size:0.85rem;">Ülke:</label>
+          <label style="font-size:0.8rem;">Ülke:</label>
           <select id="countrySelect">
             <option value="TR">🇹🇷 TR</option>
             <option value="US">🇺🇸 US</option>
@@ -249,7 +248,7 @@
           </select>
         </div>
         <div style="flex: 1;">
-          <label style="font-size:0.85rem;">Müsabaka/Hat:</label>
+          <label style="font-size:0.8rem;">Müsabaka/Hat:</label>
           <select id="matchSelect">
             <option value="1">1. Hat</option>
             <option value="2">2. Hat</option>
@@ -258,7 +257,7 @@
       </div>
       
       <div>
-        <label style="font-size:0.85rem;">Banko/Oda:</label>
+        <label style="font-size:0.8rem;">Banko/Oda:</label>
         <input type="text" id="counterName" value="Banko 1">
       </div>
 
@@ -270,8 +269,8 @@
 
     <!-- Kontrol Alt Kısım -->
     <div class="control-bottom">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-        <h2 style="font-size: 1.1rem; margin: 0;">Sıradakiler (<span id="totalCount">0</span>)</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3px;">
+        <h2 style="font-size: 1rem; margin: 0;">Sıradakiler (<span id="totalCount">0</span>)</h2>
         <button class="btn-clear-all" type="button" id="btnClearAll">🗑️ Tümünü Sil</button>
       </div>
       <div class="waiting-list-small" id="miniList"></div>
@@ -364,12 +363,12 @@
       if (miniListElement) miniListElement.innerHTML = '';
       if (totalCount) totalCount.textContent = queue.length;
 
-      // 1. Hat Çağrılanlar
+      // 1. Hat Çağrılanlar (10+ isim rahatça sığar)
       const calledList1 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '1');
       calledList1.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
 
       if (calledList1.length === 0) {
-        qList1.innerHTML = "<p style='font-size: 0.95rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
+        qList1.innerHTML = "<p style='font-size: 0.85rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
       } else {
         calledList1.forEach((item, index) => {
           const card = document.createElement('div');
@@ -392,7 +391,7 @@
       calledList2.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
 
       if (calledList2.length === 0) {
-        qList2.innerHTML = "<p style='font-size: 0.95rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
+        qList2.innerHTML = "<p style='font-size: 0.85rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
       } else {
         calledList2.forEach((item, index) => {
           const card = document.createElement('div');
@@ -413,7 +412,7 @@
       // Sağ Liste
       if (miniListElement) {
         if (queue.length === 0) {
-          miniListElement.innerHTML = "<p style='font-size: 0.85rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
+          miniListElement.innerHTML = "<p style='font-size: 0.8rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
         } else {
           queue.forEach((item) => {
             const mini = document.createElement('div');
@@ -424,9 +423,9 @@
 
             mini.innerHTML = `
               <div class="mini-left">
-                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 15px; height: 15px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
-                <span style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
-                  ${flag} ${item.isim} <span style="opacity:0.7; font-size:0.65rem;">${groupText}</span>
+                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 14px; height: 14px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
+                <span style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
+                  ${flag} ${item.isim} <span style="opacity:0.7; font-size:0.6rem;">${groupText}</span>
                 </span>
               </div>
               <div class="action-btns">
@@ -457,7 +456,6 @@
         window.open(baseUrl + '?tv=true', '_blank', 'width=1280,height=900,scrollbars=yes,resizable=yes');
       });
 
-      // Tüm Listeyi Temizle Butonu
       document.getElementById('btnClearAll').addEventListener('click', () => {
         if (queue.length === 0) return alert("Liste zaten boş!");
         if (confirm("Listedeki tüm kişiler tamamen silinecek. Emin misiniz?")) {
