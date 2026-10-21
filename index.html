@@ -37,6 +37,16 @@
       overflow-y: auto;
     }
 
+    /* Yalnızca TV Penceresi Modu (Sadece sol tarafı kaplatır) */
+    body.tv-mode .control-side {
+      display: none !important;
+    }
+    body.tv-mode .display-side {
+      flex: 100% !important;
+      border-right: none !important;
+      padding: 50px !important;
+    }
+
     h1, h2 { color: #38bdf8; margin-bottom: 5px; }
 
     .queue-container {
@@ -96,6 +106,9 @@
     .btn-call { background: #3b82f6; margin-top: 5px; }
     .btn-call:hover { background: #2563eb; }
     
+    .btn-tv { background: #8b5cf6; font-size: 0.9rem; }
+    .btn-tv:hover { background: #7c3aed; }
+
     .btn-delete { background: #ef4444; padding: 5px 8px; font-size: 0.75rem; width: auto; }
     .btn-edit { background: #f59e0b; padding: 5px 8px; font-size: 0.75rem; width: auto; color: white; }
     .btn-edit:hover { background: #d97706; }
@@ -148,6 +161,9 @@
   <!-- PERSONEL / KONTROL PANELİ (SAĞ) -->
   <div class="control-side">
     <h2>Personel Paneli</h2>
+
+    <!-- TV Ekranını Ayrı Pencerede Aç Butonu -->
+    <button class="btn-tv" onclick="openTVWindow()">📺 TV Ekranını Ayrı Pencerede Aç</button>
     
     <!-- Excel Yükleme Alanı -->
     <div class="excel-box">
@@ -198,6 +214,14 @@
   <audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
   <script>
+    // URL'de ?tv=true var mı kontrol et
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTVMode = urlParams.get('tv') === 'true';
+
+    if (isTVMode) {
+      document.body.classList.add('tv-mode');
+    }
+
     let queue = [];
     try {
       const saved = localStorage.getItem('siramatik_queue');
@@ -216,6 +240,13 @@
       );
     }
 
+    // Ayrı Pencerede Sadece Barko Ekranını Açma
+    function openTVWindow() {
+      const tvUrl = window.location.href.split('?')[0] + '?tv=true';
+      window.open(tvUrl, 'TVEkrani', 'width=1280,height=720');
+    }
+
+    // Sekmeler ve Pencereler Arası Canlı Senkronizasyon
     window.addEventListener('storage', (e) => {
       if (e.key === 'siramatik_queue') {
         try {
@@ -223,11 +254,18 @@
           renderUI();
         } catch(err) {}
       }
+      if (e.key === 'siramatik_play_sound' && isTVMode) {
+        dingSound.currentTime = 0;
+        dingSound.play().catch(e => console.log("Ses oynatma izni bekleniyor"));
+      }
     });
 
-    function saveData() {
+    function saveData(triggerSound = false) {
       try {
         localStorage.setItem('siramatik_queue', JSON.stringify(queue));
+        if (triggerSound) {
+          localStorage.setItem('siramatik_play_sound', Date.now());
+        }
       } catch(e) {}
       renderUI();
     }
@@ -259,7 +297,7 @@
           ulke: countrySelect.value,
           banko: counterInput.value,
           status: 'Bekliyor',
-          calledAt: 0 // Sıralama için zaman damgası
+          calledAt: 0
         });
       }
 
@@ -342,14 +380,14 @@
       }
 
       let updated = false;
-      let timestamp = Date.now(); // Seçim sırasını korumak için ortak taban
+      let timestamp = Date.now();
 
       checkboxes.forEach((cb, index) => {
         const id = cb.getAttribute('data-id');
         const item = queue.find(i => String(i.id) === String(id));
         if (item && item.status !== 'Çağrıldı') {
           item.status = 'Çağrıldı';
-          item.calledAt = timestamp + index; // Hangi sıra ile tıklandıysa o zaman damgası verilir
+          item.calledAt = timestamp + index;
           updated = true;
         }
       });
@@ -357,7 +395,7 @@
       if (updated) {
         dingSound.currentTime = 0;
         dingSound.play().catch(e => console.log("Ses çalma engeli"));
-        saveData();
+        saveData(true); // Diğer pencerelerde de sesi tetikler
       }
     }
 
@@ -371,20 +409,20 @@
       const miniListElement = document.getElementById('miniList');
       const totalCount = document.getElementById('totalCount');
       
-      if (!queueListElement || !miniListElement) return;
+      if (!queueListElement) return;
 
       queueListElement.innerHTML = '';
-      miniListElement.innerHTML = '';
-      totalCount.textContent = queue.length;
+      if (miniListElement) miniListElement.innerHTML = '';
+      if (totalCount) totalCount.textContent = queue.length;
 
-      // Sol Ekran (Çağrılanlar - Seçim sırasına göre artan şekilde sıralanır)
+      // Sol Ekran (Çağrılanlar)
       const calledList = queue.filter(item => item.status === 'Çağrıldı');
       calledList.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
 
       if (calledList.length === 0) {
-        queueListElement.innerHTML = "<p style='font-size: 1.3rem; opacity: 0.6;'>Şu an çağrılan kimse yok. Sağdaki listeden kişileri seçip 'Seçilenleri Çağır' butonuna basın.</p>";
+        queueListElement.innerHTML = "<p style='font-size: 1.3rem; opacity: 0.6;'>Şu an çağrılan kimse yok.</p>";
       } else {
-        const top6Called = calledList.slice(0, 6); // İlk 6 çağrılan
+        const top6Called = calledList.slice(0, 6);
         top6Called.forEach((item, index) => {
           const card = document.createElement('div');
           card.className = `queue-card ${index === 0 ? 'active' : ''}`;
@@ -402,29 +440,31 @@
       }
 
       // Sağ Liste (Sıradakiler)
-      if (queue.length === 0) {
-        miniListElement.innerHTML = "<p style='font-size: 0.9rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
-      } else {
-        queue.forEach((item) => {
-          const mini = document.createElement('div');
-          mini.className = 'mini-card';
-          const flag = getFlagEmoji(item.ulke);
-          const isCalled = item.status === 'Çağrıldı';
+      if (miniListElement) {
+        if (queue.length === 0) {
+          miniListElement.innerHTML = "<p style='font-size: 0.9rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
+        } else {
+          queue.forEach((item) => {
+            const mini = document.createElement('div');
+            mini.className = 'mini-card';
+            const flag = getFlagEmoji(item.ulke);
+            const isCalled = item.status === 'Çağrıldı';
 
-          mini.innerHTML = `
-            <div class="mini-left">
-              <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 18px; height: 18px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
-              <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
-                ${flag} ${item.isim}
-              </span>
-            </div>
-            <div class="action-btns">
-              <button class="btn-edit" onclick="editPerson('${item.id}')">Düzenle</button>
-              <button class="btn-delete" onclick="removePerson('${item.id}')">Sil</button>
-            </div>
-          `;
-          miniListElement.appendChild(mini);
-        });
+            mini.innerHTML = `
+              <div class="mini-left">
+                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 18px; height: 18px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
+                <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
+                  ${flag} ${item.isim}
+                </span>
+              </div>
+              <div class="action-btns">
+                <button class="btn-edit" onclick="editPerson('${item.id}')">Düzenle</button>
+                <button class="btn-delete" onclick="removePerson('${item.id}')">Sil</button>
+              </div>
+            `;
+            miniListElement.appendChild(mini);
+          });
+        }
       }
     }
 
