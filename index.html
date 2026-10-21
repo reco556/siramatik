@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Profesyonel Sıramatik ve Barko Ekranı</title>
-  <!-- Excel okumak için SheetJS (xlsx) Kütüphanesi -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Excel kütüphanesi hata verirse sistemi durdurmayacak şekilde güvenli yükleme -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="console.warn('Excel kütüphanesi yüklenemedi ama sistem çalışmaya devam edecek.')"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -139,7 +139,7 @@
 
   <!-- BARKO / TV EKRANI (SOL) -->
   <div class="display-side">
-    <h1>ÇAĞRILANLAR / BEKLEME LİSTESİ</h1>
+    <h1>ÇAĞRILANLAR EKRANI</h1>
     <div class="queue-container" id="queueList">
       <!-- Çağrılanlar buraya gelecek -->
     </div>
@@ -198,12 +198,20 @@
   <audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
   <script>
-    let queue = JSON.parse(localStorage.getItem('siramatik_queue')) || [];
+    // Bellek içi yedek dizi
+    let queue = [];
+    try {
+      const saved = localStorage.getItem('siramatik_queue');
+      if (saved) queue = JSON.parse(saved);
+    } catch(e) {
+      queue = [];
+    }
+
     const dingSound = document.getElementById('dingSound');
 
     function getFlagEmoji(countryCode) {
       if (!countryCode) return '🏳️';
-      const code = countryCode.toUpperCase();
+      const code = String(countryCode).toUpperCase();
       return code.replace(/./g, char => 
         String.fromCodePoint(127397 + char.charCodeAt(0))
       );
@@ -211,13 +219,17 @@
 
     window.addEventListener('storage', (e) => {
       if (e.key === 'siramatik_queue') {
-        queue = JSON.parse(e.newValue) || [];
-        renderUI();
+        try {
+          queue = JSON.parse(e.newValue) || [];
+          renderUI();
+        } catch(err) {}
       }
     });
 
     function saveData() {
-      localStorage.setItem('siramatik_queue', JSON.stringify(queue));
+      try {
+        localStorage.setItem('siramatik_queue', JSON.stringify(queue));
+      } catch(e) {}
       renderUI();
     }
 
@@ -227,12 +239,16 @@
       const countrySelect = document.getElementById('countrySelect');
       const counterInput = document.getElementById('counterName');
       
-      if (!nameInput.value.trim()) return alert("Lütfen bir isim girin!");
+      const val = nameInput.value.trim();
+      if (!val) {
+        alert("Lütfen bir isim girin!");
+        return;
+      }
 
       if (editId) {
         const index = queue.findIndex(item => String(item.id) === String(editId));
         if (index !== -1) {
-          queue[index].isim = nameInput.value;
+          queue[index].isim = val;
           queue[index].ulke = countrySelect.value;
           queue[index].banko = counterInput.value;
         }
@@ -240,7 +256,7 @@
       } else {
         queue.push({
           id: String(Date.now() + Math.random()),
-          isim: nameInput.value,
+          isim: val,
           ulke: countrySelect.value,
           banko: counterInput.value,
           status: 'Bekliyor'
@@ -279,20 +295,136 @@
 
       const reader = new FileReader();
       reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        try {
+          if (typeof XLSX === 'undefined') {
+            alert("Excel kütüphanesi yüklenemediği için dosya okunamadı. Lütfen tekli ekleme kullanın.");
+            return;
+          }
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        jsonData.forEach(row => {
-          const isim = row.İsim || row.Ad || row.Name || row[Object.keys(row)[0]];
-          const ulke = row.Ülke || row.Ulke || row.Country || "TR";
+          let addedCount = 0;
+          jsonData.forEach(row => {
+            const isim = row.İsim || row.Ad || row.Name || row[Object.keys(row)[0]];
+            const ulke = row.Ülke || row.Ulke || row.Country || "TR";
 
-          if (isim) {
-            queue.push({
-              id: String(Date.now() + Math.random()),
-              isim: String(isim),
-              ulke: String(ulke).trim().toUpperCase(),
-              banko: "Banko 1",
-              status: 'Bekli
+            if (isim) {
+              queue.push({
+                id: String(Date.now() + Math.random()),
+                isim: String(isim).trim(),
+                ulke: String(ulke).trim().toUpperCase(),
+                banko: "Banko 1",
+                status: 'Bekliyor'
+              });
+              addedCount++;
+            }
+          });
+
+          saveData();
+          alert(`${addedCount} kişi başarıyla listeye eklendi!`);
+        } catch (err) {
+          alert("Excel okunurken bir hata oluştu.");
+        }
+        document.getElementById('excelFile').value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function callSelected() {
+      const checkboxes = document.querySelectorAll('.mini-checkbox:checked');
+      if (checkboxes.length === 0) {
+        alert("Lütfen listeden en az bir kişi seçin!");
+        return;
+      }
+
+      let updated = false;
+      checkboxes.forEach(cb => {
+        const id = cb.getAttribute('data-id');
+        const item = queue.find(i => String(i.id) === String(id));
+        if (item) {
+          item.status = 'Çağrıldı';
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        dingSound.currentTime = 0;
+        dingSound.play().catch(e => console.log("Ses çalma engeli"));
+        saveData();
+      }
+    }
+
+    function removePerson(id) {
+      queue = queue.filter(item => String(item.id) !== String(id));
+      saveData();
+    }
+
+    function renderUI() {
+      const queueListElement = document.getElementById('queueList');
+      const miniListElement = document.getElementById('miniList');
+      const totalCount = document.getElementById('totalCount');
+      
+      if (!queueListElement || !miniListElement) return;
+
+      queueListElement.innerHTML = '';
+      miniListElement.innerHTML = '';
+      totalCount.textContent = queue.length;
+
+      // Sol Ekran (Çağrılanlar)
+      const calledList = queue.filter(item => item.status === 'Çağrıldı');
+
+      if (calledList.length === 0) {
+        queueListElement.innerHTML = "<p style='font-size: 1.3rem; opacity: 0.6;'>Şu an çağrılan kimse yok. Sağdaki listeden kişileri seçip 'Seçilenleri Çağır' butonuna basın.</p>";
+      } else {
+        const top6Called = calledList.slice(-6).reverse();
+        top6Called.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = `queue-card ${index === 0 ? 'active' : ''}`;
+          const flag = getFlagEmoji(item.ulke);
+          card.innerHTML = `
+            <div class="rank">#</div>
+            <div class="name-area">
+              <span class="flag">${flag}</span>
+              <span>${item.isim}</span>
+            </div>
+            <div class="status">${item.banko} (Çağrıldı)</div>
+          `;
+          queueListElement.appendChild(card);
+        });
+      }
+
+      // Sağ Liste (Sıradakiler)
+      if (queue.length === 0) {
+        miniListElement.innerHTML = "<p style='font-size: 0.9rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
+      } else {
+        queue.forEach((item) => {
+          const mini = document.createElement('div');
+          mini.className = 'mini-card';
+          const flag = getFlagEmoji(item.ulke);
+          const isCalled = item.status === 'Çağrıldı';
+
+          mini.innerHTML = `
+            <div class="mini-left">
+              <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 18px; height: 18px; cursor: pointer;">
+              <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
+                ${flag} ${item.isim}
+              </span>
+            </div>
+            <div class="action-btns">
+              <button class="btn-edit" onclick="editPerson('${item.id}')">Düzenle</button>
+              <button class="btn-delete" onclick="removePerson('${item.id}')">Sil</button>
+            </div>
+          `;
+          miniListElement.appendChild(mini);
+        });
+      }
+    }
+
+    // İlk açılışta arayüzü çiz
+    renderUI();
+  </script>
+</body>
+</html>
