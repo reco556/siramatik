@@ -2,7 +2,9 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Basit Sıramatik ve Barko Ekranı</title>
+  <title>Profesyonel Sıramatik ve Barko Ekranı</title>
+  <!-- Excel okumak için SheetJS (xlsx) Kütüphanesi -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -14,9 +16,9 @@
       overflow: hidden;
     }
 
-    /* Sol Taraf: Barko / TV Ekranı (%70) */
+    /* Sol Taraf: Barko / TV Ekranı (%65) */
     .display-side {
-      flex: 7;
+      flex: 6.5;
       padding: 40px;
       display: flex;
       flex-direction: column;
@@ -24,17 +26,18 @@
       border-right: 2px solid #334155;
     }
 
-    /* Sağ Taraf: Personel / Kontrol Paneli (%30) */
+    /* Sağ Taraf: Personel / Kontrol Paneli (%35) */
     .control-side {
-      flex: 3;
+      flex: 3.5;
       background: #1e293b;
-      padding: 30px;
+      padding: 25px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 15px;
+      overflow-y: auto;
     }
 
-    h1, h2 { color: #38bdf8; margin-bottom: 10px; }
+    h1, h2 { color: #38bdf8; margin-bottom: 5px; }
 
     .queue-container {
       display: flex;
@@ -61,14 +64,15 @@
     }
 
     .rank { font-size: 1.8rem; font-weight: bold; width: 50px; opacity: 0.7; }
-    .name { font-size: 2.2rem; font-weight: 700; flex-grow: 1; }
+    .name-area { display: flex; align-items: center; gap: 15px; font-size: 2.2rem; font-weight: 700; flex-grow: 1; }
+    .flag { font-size: 2.5rem; }
     .status { font-size: 1.5rem; background: rgba(255,255,255,0.15); padding: 5px 15px; border-radius: 8px; }
 
     /* Kontrol Paneli Elemanları */
     input, select, button {
       width: 100%;
-      padding: 12px;
-      font-size: 1.1rem;
+      padding: 10px;
+      font-size: 1rem;
       border-radius: 8px;
       border: none;
       outline: none;
@@ -89,21 +93,29 @@
     }
     button:hover { background: #16a34a; }
 
-    .btn-call { background: #3b82f6; margin-top: 10px; }
+    .btn-call { background: #3b82f6; }
     .btn-call:hover { background: #2563eb; }
     
-    .btn-delete { background: #ef4444; padding: 8px; font-size: 0.9rem; width: auto; }
+    .btn-delete { background: #ef4444; padding: 6px 12px; font-size: 0.85rem; width: auto; }
     
+    .excel-box {
+      border: 2px dashed #475569;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+      background: #0f172a;
+    }
+
     .waiting-list-small {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-height: 300px;
+      gap: 6px;
+      max-height: 200px;
       overflow-y: auto;
     }
     .mini-card {
       background: #0f172a;
-      padding: 10px;
+      padding: 8px 12px;
       border-radius: 6px;
       display: flex;
       justify-content: space-between;
@@ -125,9 +137,30 @@
   <div class="control-side">
     <h2>Personel Paneli</h2>
     
+    <!-- Excel Yükleme Alanı -->
+    <div class="excel-box">
+      <label style="font-size: 0.9rem; color: #cbd5e1; display: block; margin-bottom: 5px;">📊 Excel'den Toplu Liste Yükle</label>
+      <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" onchange="handleExcelUpload(event)">
+      <small style="font-size: 0.75rem; opacity: 0.7;">(Sütunlar: İsim, Ülke Kodu örn: TR, US)</small>
+    </div>
+
     <div>
-      <label>Kişi / Hasta Adı:</label>
+      <label>Kişi / Ad Soyad:</label>
       <input type="text" id="personName" placeholder="Örn: Ahmet Yılmaz">
+    </div>
+
+    <div>
+      <label>Ülke Seçin:</label>
+      <select id="countrySelect">
+        <option value="TR">🇹🇷 Türkiye (TR)</option>
+        <option value="US">🇺🇸 Amerika (US)</option>
+        <option value="GB">🇬🇧 İngiltere (GB)</option>
+        <option value="DE">🇩🇪 Almanya (DE)</option>
+        <option value="FR">🇫🇷 Fransa (FR)</option>
+        <option value="AZ">🇦🇿 Azerbaycan (AZ)</option>
+        <option value="NL">🇳🇱 Hollanda (NL)</option>
+        <option value="IT">🇮🇹 İtalya (IT)</option>
+      </select>
     </div>
     
     <div>
@@ -135,14 +168,12 @@
       <input type="text" id="counterName" value="Banko 1">
     </div>
 
-    <button onclick="addPerson()">Listeye Ekle</button>
+    <button onclick="addPerson()">Listeye Tekli Ekle</button>
 
     <hr style="border-color: #334155;">
 
-    <h2>Sıradakiler</h2>
-    <div class="waiting-list-small" id="miniList">
-      <!-- Yönetim listesi -->
-    </div>
+    <h2>Sıradakiler (<span id="totalCount">0</span>)</h2>
+    <div class="waiting-list-small" id="miniList"></div>
 
     <button class="btn-call" onclick="callNext()">Sıradakini Çağır 🔔</button>
   </div>
@@ -151,12 +182,18 @@
   <audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
   <script>
-    // LocalStorage tabanlı veri yönetimi
     let queue = JSON.parse(localStorage.getItem('siramatik_queue')) || [];
-
     const dingSound = document.getElementById('dingSound');
 
-    // Sayfa yüklendiğinde ve başka sekmeden veri değiştiğinde tetiklenir
+    // Ülke Kodunu Emojik Bayrağa Çevirme Fonksiyonu
+    function getFlagEmoji(countryCode) {
+      if (!countryCode) return '🏳️';
+      const code = countryCode.toUpperCase();
+      return code.replace(/./g, char => 
+        String.fromCodePoint(127397 + char.charCodeAt(0))
+      );
+    }
+
     window.addEventListener('storage', (e) => {
       if (e.key === 'siramatik_queue') {
         queue = JSON.parse(e.newValue) || [];
@@ -171,13 +208,15 @@
 
     function addPerson() {
       const nameInput = document.getElementById('personName');
+      const countrySelect = document.getElementById('countrySelect');
       const counterInput = document.getElementById('counterName');
       
       if (!nameInput.value.trim()) return alert("Lütfen bir isim girin!");
 
       queue.push({
-        id: Date.now(),
+        id: Date.now() + Math.random(),
         isim: nameInput.value,
+        ulke: countrySelect.value,
         banko: counterInput.value,
         status: 'Bekliyor'
       });
@@ -186,13 +225,48 @@
       saveData();
     }
 
+    // Excel Dosyasını Okuma Fonksiyonu
+    function handleExcelUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // JSON formatına dönüştür (İlk satır başlık kabul edilir)
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        jsonData.forEach(row => {
+          // Excel sütun adları: İsim (veya Ad), Ülke (veya UlkeCode)
+          const isim = row.İsim || row.Ad || row.Name || row[Object.keys(row)[0]];
+          const ulke = row.Ülke || row.Ulke || row.Country || "TR";
+
+          if (isim) {
+            queue.push({
+              id: Date.now() + Math.random(),
+              isim: String(isim),
+              ulke: String(ulke).trim().toUpperCase(),
+              banko: "Banko 1",
+              status: 'Bekliyor'
+            });
+          }
+        });
+
+        saveData();
+        alert(`${jsonData.length} kişi başarıyla listeye eklendi!`);
+        document.getElementById('excelFile').value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
     function callNext() {
-      // Bekleyen ilk kişiyi bul
       const waitingIndex = queue.findIndex(item => item.status === 'Bekliyor');
       if (waitingIndex === -1) return alert("Bekleyen kimse kalmadı!");
 
-      // Önceki çağrılanların durumunu güncelleyebiliriz veya listeden silebiliriz
-      // Burada ilk sıradakini "Çağrıldı" yapıyoruz
       queue[waitingIndex].status = 'Çağrıldı';
       
       dingSound.currentTime = 0;
@@ -209,9 +283,11 @@
     function renderUI() {
       const queueListElement = document.getElementById('queueList');
       const miniListElement = document.getElementById('miniList');
+      const totalCount = document.getElementById('totalCount');
       
       queueListElement.innerHTML = '';
       miniListElement.innerHTML = '';
+      totalCount.textContent = queue.length;
 
       if (queue.length === 0) {
         queueListElement.innerHTML = "<p style='font-size: 1.5rem; opacity: 0.6;'>Şu an bekleyen kimse yok.</p>";
@@ -221,11 +297,17 @@
       const top6 = queue.slice(0, 6);
       top6.forEach((item, index) => {
         const card = document.createElement('div');
-        card.className = `queue-card ${item.status === 'Çağrıldı' && index === 0 ? 'active' : ''}`;
+        const isActive = item.status === 'Çağrıldı' && index === 0;
+        const flag = getFlagEmoji(item.ulke);
+
+        card.className = `queue-card ${isActive ? 'active' : ''}`;
         card.innerHTML = `
           <div class="rank">${index + 1}.</div>
-          <div class="name">${item.isim}</div>
-          <div class="status">${item.status === 'Çağrıldı' ? item.banko + ' (Çağrıldı)' : 'Bekliyor'}</div>
+          <div class="name-area">
+            <span class="flag">${flag}</span>
+            <span>${item.isim}</span>
+          </div>
+          <div class="status">${isActive ? item.banko + ' (Çağrıldı)' : 'Bekliyor'}</div>
         `;
         queueListElement.appendChild(card);
       });
@@ -234,15 +316,15 @@
       queue.forEach((item) => {
         const mini = document.createElement('div');
         mini.className = 'mini-card';
+        const flag = getFlagEmoji(item.ulke);
         mini.innerHTML = `
-          <span><b>${item.isim}</b> (${item.status})</span>
-          <button class="btn-delete" onclick="removePerson(${item.id})">Sil</button>
+          <span style="font-size: 0.9rem;">${flag} <b>${item.isim}</b> (${item.status})</span>
+          <button class="btn-delete" onclick="removePerson('${item.id}')">Sil</button>
         `;
         miniListElement.appendChild(mini);
       });
     }
 
-    // İlk açılışta ekranı doldur
     renderUI();
   </script>
 </body>
