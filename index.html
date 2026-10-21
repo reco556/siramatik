@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Basit Sıramatik ve Barko Ekranı</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0f172a;
+      color: #ffffff;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sol Taraf: Barko / TV Ekranı (%70) */
+    .display-side {
+      flex: 7;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      border-right: 2px solid #334155;
+    }
+
+    /* Sağ Taraf: Personel / Kontrol Paneli (%30) */
+    .control-side {
+      flex: 3;
+      background: #1e293b;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    h1, h2 { color: #38bdf8; margin-bottom: 10px; }
+
+    .queue-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .queue-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e293b;
+      padding: 20px 25px;
+      border-radius: 12px;
+      border-left: 8px solid #64748b;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    .queue-card.active {
+      background: #0284c7;
+      border-left-color: #4ade80;
+      transform: scale(1.02);
+    }
+
+    .rank { font-size: 1.8rem; font-weight: bold; width: 50px; opacity: 0.7; }
+    .name { font-size: 2.2rem; font-weight: 700; flex-grow: 1; }
+    .status { font-size: 1.5rem; background: rgba(255,255,255,0.15); padding: 5px 15px; border-radius: 8px; }
+
+    /* Kontrol Paneli Elemanları */
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
+
+    input, select {
+      background: #0f172a;
+      color: #fff;
+      border: 1px solid #475569;
+    }
+
+    button {
+      background: #22c55e;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #16a34a; }
+
+    .btn-call { background: #3b82f6; margin-top: 10px; }
+    .btn-call:hover { background: #2563eb; }
+    
+    .btn-delete { background: #ef4444; padding: 8px; font-size: 0.9rem; width: auto; }
+    
+    .waiting-list-small {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .mini-card {
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARKO / TV EKRANI (SOL) -->
+  <div class="display-side">
+    <h1>BEKLEME LİSTESİ</h1>
+    <div class="queue-container" id="queueList">
+      <!-- İlk 6 kişi buraya gelecek -->
+    </div>
+  </div>
+
+  <!-- PERSONEL / KONTROL PANELİ (SAĞ) -->
+  <div class="control-side">
+    <h2>Personel Paneli</h2>
+    
+    <div>
+      <label>Kişi / Hasta Adı:</label>
+      <input type="text" id="personName" placeholder="Örn: Ahmet Yılmaz">
+    </div>
+    
+    <div>
+      <label>Atanacak Banko/Oda:</label>
+      <input type="text" id="counterName" value="Banko 1">
+    </div>
+
+    <button onclick="addPerson()">Listeye Ekle</button>
+
+    <hr style="border-color: #334155;">
+
+    <h2>Sıradakiler</h2>
+    <div class="waiting-list-small" id="miniList">
+      <!-- Yönetim listesi -->
+    </div>
+
+    <button class="btn-call" onclick="callNext()">Sıradakini Çağır 🔔</button>
+  </div>
+
+  <!-- Ses Efekti -->
+  <audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+  <script>
+    // LocalStorage tabanlı veri yönetimi
+    let queue = JSON.parse(localStorage.getItem('siramatik_queue')) || [];
+
+    const dingSound = document.getElementById('dingSound');
+
+    // Sayfa yüklendiğinde ve başka sekmeden veri değiştiğinde tetiklenir
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'siramatik_queue') {
+        queue = JSON.parse(e.newValue) || [];
+        renderUI();
+      }
+    });
+
+    function saveData() {
+      localStorage.setItem('siramatik_queue', JSON.stringify(queue));
+      renderUI();
+    }
+
+    function addPerson() {
+      const nameInput = document.getElementById('personName');
+      const counterInput = document.getElementById('counterName');
+      
+      if (!nameInput.value.trim()) return alert("Lütfen bir isim girin!");
+
+      queue.push({
+        id: Date.now(),
+        isim: nameInput.value,
+        banko: counterInput.value,
+        status: 'Bekliyor'
+      });
+
+      nameInput.value = '';
+      saveData();
+    }
+
+    function callNext() {
+      // Bekleyen ilk kişiyi bul
+      const waitingIndex = queue.findIndex(item => item.status === 'Bekliyor');
+      if (waitingIndex === -1) return alert("Bekleyen kimse kalmadı!");
+
+      // Önceki çağrılanların durumunu güncelleyebiliriz veya listeden silebiliriz
+      // Burada ilk sıradakini "Çağrıldı" yapıyoruz
+      queue[waitingIndex].status = 'Çağrıldı';
+      
+      dingSound.currentTime = 0;
+      dingSound.play().catch(e => console.log("Ses çalma engeli"));
+
+      saveData();
+    }
+
+    function removePerson(id) {
+      queue = queue.filter(item => item.id !== id);
+      saveData();
+    }
+
+    function renderUI() {
+      const queueListElement = document.getElementById('queueList');
+      const miniListElement = document.getElementById('miniList');
+      
+      queueListElement.innerHTML = '';
+      miniListElement.innerHTML = '';
+
+      if (queue.length === 0) {
+        queueListElement.innerHTML = "<p style='font-size: 1.5rem; opacity: 0.6;'>Şu an bekleyen kimse yok.</p>";
+      }
+
+      // Barko Ekranı İçin Sadece İlk 6 Kişi
+      const top6 = queue.slice(0, 6);
+      top6.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = `queue-card ${item.status === 'Çağrıldı' && index === 0 ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="rank">${index + 1}.</div>
+          <div class="name">${item.isim}</div>
+          <div class="status">${item.status === 'Çağrıldı' ? item.banko + ' (Çağrıldı)' : 'Bekliyor'}</div>
+        `;
+        queueListElement.appendChild(card);
+      });
+
+      // Sağ Taraftaki Yönetim Listesi
+      queue.forEach((item) => {
+        const mini = document.createElement('div');
+        mini.className = 'mini-card';
+        mini.innerHTML = `
+          <span><b>${item.isim}</b> (${item.status})</span>
+          <button class="btn-delete" onclick="removePerson(${item.id})">Sil</button>
+        `;
+        miniListElement.appendChild(mini);
+      });
+    }
+
+    // İlk açılışta ekranı doldur
+    renderUI();
+  </script>
+</body>
+</html>
