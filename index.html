@@ -96,7 +96,9 @@
     .btn-call { background: #3b82f6; }
     .btn-call:hover { background: #2563eb; }
     
-    .btn-delete { background: #ef4444; padding: 6px 12px; font-size: 0.85rem; width: auto; }
+    .btn-delete { background: #ef4444; padding: 5px 10px; font-size: 0.8rem; width: auto; }
+    .btn-edit { background: #f59e0b; padding: 5px 10px; font-size: 0.8rem; width: auto; color: white; }
+    .btn-edit:hover { background: #d97706; }
     
     .excel-box {
       border: 2px dashed #475569;
@@ -110,7 +112,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 200px;
+      max-height: 220px;
       overflow-y: auto;
     }
     .mini-card {
@@ -120,6 +122,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+    .action-btns {
+      display: flex;
+      gap: 5px;
     }
   </style>
 </head>
@@ -143,6 +149,9 @@
       <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" onchange="handleExcelUpload(event)">
       <small style="font-size: 0.75rem; opacity: 0.7;">(Sütunlar: İsim, Ülke Kodu örn: TR, US)</small>
     </div>
+
+    <!-- Gizli Düzenleme ID Alanı -->
+    <input type="hidden" id="editId" value="">
 
     <div>
       <label>Kişi / Ad Soyad:</label>
@@ -168,7 +177,8 @@
       <input type="text" id="counterName" value="Banko 1">
     </div>
 
-    <button onclick="addPerson()">Listeye Tekli Ekle</button>
+    <button id="saveBtn" onclick="savePerson()">Listeye Ekle</button>
+    <button id="cancelEditBtn" onclick="cancelEdit()" style="background: #64748b; display: none; margin-top: 5px;">Düzenlemeyi İptal Et</button>
 
     <hr style="border-color: #334155;">
 
@@ -205,23 +215,61 @@
       renderUI();
     }
 
-    function addPerson() {
+    // Yeni Ekleme veya Güncelleme İşlemi
+    function savePerson() {
+      const editId = document.getElementById('editId').value;
       const nameInput = document.getElementById('personName');
       const countrySelect = document.getElementById('countrySelect');
       const counterInput = document.getElementById('counterName');
       
       if (!nameInput.value.trim()) return alert("Lütfen bir isim girin!");
 
-      queue.push({
-        id: String(Date.now() + Math.random()),
-        isim: nameInput.value,
-        ulke: countrySelect.value,
-        banko: counterInput.value,
-        status: 'Bekliyor'
-      });
+      if (editId) {
+        // Düzenleme Modu: Var olan kaydı güncelle (Sırası bozulmaz)
+        const index = queue.findIndex(item => String(item.id) === String(editId));
+        if (index !== -1) {
+          queue[index].isim = nameInput.value;
+          queue[index].ulke = countrySelect.value;
+          queue[index].banko = counterInput.value;
+        }
+        cancelEdit();
+      } else {
+        // Yeni Kayıt Ekleme
+        queue.push({
+          id: String(Date.now() + Math.random()),
+          isim: nameInput.value,
+          ulke: countrySelect.value,
+          banko: counterInput.value,
+          status: 'Bekliyor'
+        });
+      }
 
       nameInput.value = '';
       saveData();
+    }
+
+    // Düzenleme Modunu Başlat
+    function editPerson(id) {
+      const item = queue.find(i => String(i.id) === String(id));
+      if (!item) return;
+
+      document.getElementById('editId').value = item.id;
+      document.getElementById('personName').value = item.isim;
+      document.getElementById('countrySelect').value = item.ulke || 'TR';
+      document.getElementById('counterName').value = item.banko || 'Banko 1';
+
+      document.getElementById('saveBtn').textContent = 'Güncellemeyi Kaydet';
+      document.getElementById('saveBtn').style.background = '#f59e0b';
+      document.getElementById('cancelEditBtn').style.display = 'block';
+    }
+
+    // Düzenlemeyi İptal Et
+    function cancelEdit() {
+      document.getElementById('editId').value = '';
+      document.getElementById('personName').value = '';
+      document.getElementById('saveBtn').textContent = 'Listeye Ekle';
+      document.getElementById('saveBtn').style.background = '#22c55e';
+      document.getElementById('cancelEditBtn').style.display = 'none';
     }
 
     function handleExcelUpload(e) {
@@ -270,9 +318,7 @@
       saveData();
     }
 
-    // Düzeltilen Silme Fonksiyonu
     function removePerson(id) {
-      // String dönüşümü ile güvenli karşılaştırma sağlanarak silme yapılıyor
       queue = queue.filter(item => String(item.id) !== String(id));
       saveData();
     }
@@ -303,7 +349,7 @@
             <span class="flag">${flag}</span>
             <span>${item.isim}</span>
           </div>
-          <div class="status">${isActive ? item.banko + ' (Çağrıldı)' : 'Bekliyer'}</div>
+          <div class="status">${isActive ? item.banko + ' (Çağrıldı)' : 'Bekliyor'}</div>
         `;
         queueListElement.appendChild(card);
       });
@@ -313,8 +359,13 @@
         mini.className = 'mini-card';
         const flag = getFlagEmoji(item.ulke);
         mini.innerHTML = `
-          <span style="font-size: 0.9rem;">${flag} <b>${item.isim}</b> (${item.status})</span>
-          <button class="btn-delete" onclick="removePerson('${item.id}')">Sil</button>
+          <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">
+            ${flag} <b>${item.isim}</b>
+          </span>
+          <div class="action-btns">
+            <button class="btn-edit" onclick="editPerson('${item.id}')">Düzenle</button>
+            <button class="btn-delete" onclick="removePerson('${item.id}')">Sil</button>
+          </div>
         `;
         miniListElement.appendChild(mini);
       });
