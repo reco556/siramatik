@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Profesyonel Sıramatik ve Barko Ekranı</title>
-  <!-- Excel kütüphanesi hata verirse sistemi durdurmayacak şekilde güvenli yükleme -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="console.warn('Excel kütüphanesi yüklenemedi ama sistem çalışmaya devam edecek.')"></script>
+  <!-- Excel kütüphanesi -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="console.warn('Excel kütüphanesi yüklenemedi.')"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -63,7 +63,7 @@
       transform: scale(1.02);
     }
 
-    .rank { font-size: 1.8rem; font-weight: bold; width: 50px; opacity: 0.7; }
+    .rank { font-size: 1.8rem; font-weight: bold; width: 50px; opacity: 0.8; color: #38bdf8; }
     .name-area { display: flex; align-items: center; gap: 15px; font-size: 2.2rem; font-weight: 700; flex-grow: 1; }
     .flag { font-size: 2.5rem; }
     .status { font-size: 1.5rem; background: rgba(255,255,255,0.15); padding: 5px 15px; border-radius: 8px; }
@@ -198,7 +198,6 @@
   <audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
   <script>
-    // Bellek içi yedek dizi
     let queue = [];
     try {
       const saved = localStorage.getItem('siramatik_queue');
@@ -259,7 +258,8 @@
           isim: val,
           ulke: countrySelect.value,
           banko: counterInput.value,
-          status: 'Bekliyor'
+          status: 'Bekliyor',
+          calledAt: 0 // Sıralama için zaman damgası
         });
       }
 
@@ -297,7 +297,7 @@
       reader.onload = function(e) {
         try {
           if (typeof XLSX === 'undefined') {
-            alert("Excel kütüphanesi yüklenemediği için dosya okunamadı. Lütfen tekli ekleme kullanın.");
+            alert("Excel kütüphanesi yüklenemedi.");
             return;
           }
           const data = new Uint8Array(e.target.result);
@@ -317,7 +317,8 @@
                 isim: String(isim).trim(),
                 ulke: String(ulke).trim().toUpperCase(),
                 banko: "Banko 1",
-                status: 'Bekliyor'
+                status: 'Bekliyor',
+                calledAt: 0
               });
               addedCount++;
             }
@@ -341,11 +342,14 @@
       }
 
       let updated = false;
-      checkboxes.forEach(cb => {
+      let timestamp = Date.now(); // Seçim sırasını korumak için ortak taban
+
+      checkboxes.forEach((cb, index) => {
         const id = cb.getAttribute('data-id');
         const item = queue.find(i => String(i.id) === String(id));
-        if (item) {
+        if (item && item.status !== 'Çağrıldı') {
           item.status = 'Çağrıldı';
+          item.calledAt = timestamp + index; // Hangi sıra ile tıklandıysa o zaman damgası verilir
           updated = true;
         }
       });
@@ -373,19 +377,20 @@
       miniListElement.innerHTML = '';
       totalCount.textContent = queue.length;
 
-      // Sol Ekran (Çağrılanlar)
+      // Sol Ekran (Çağrılanlar - Seçim sırasına göre artan şekilde sıralanır)
       const calledList = queue.filter(item => item.status === 'Çağrıldı');
+      calledList.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
 
       if (calledList.length === 0) {
         queueListElement.innerHTML = "<p style='font-size: 1.3rem; opacity: 0.6;'>Şu an çağrılan kimse yok. Sağdaki listeden kişileri seçip 'Seçilenleri Çağır' butonuna basın.</p>";
       } else {
-        const top6Called = calledList.slice(-6).reverse();
+        const top6Called = calledList.slice(0, 6); // İlk 6 çağrılan
         top6Called.forEach((item, index) => {
           const card = document.createElement('div');
           card.className = `queue-card ${index === 0 ? 'active' : ''}`;
           const flag = getFlagEmoji(item.ulke);
           card.innerHTML = `
-            <div class="rank">#</div>
+            <div class="rank">${index + 1}.</div>
             <div class="name-area">
               <span class="flag">${flag}</span>
               <span>${item.isim}</span>
@@ -408,7 +413,7 @@
 
           mini.innerHTML = `
             <div class="mini-left">
-              <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 18px; height: 18px; cursor: pointer;">
+              <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 18px; height: 18px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
               <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
                 ${flag} ${item.isim}
               </span>
@@ -423,7 +428,6 @@
       }
     }
 
-    // İlk açılışta arayüzü çiz
     renderUI();
   </script>
 </body>
