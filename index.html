@@ -19,12 +19,12 @@
     /* Sol Taraf: Çift Barko / TV Ekranı (%65) - İki Bölmeli */
     .display-side {
       flex: 6.5;
-      padding: 25px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 15px;
       border-right: 2px solid #334155;
-      overflow-y: auto;
+      overflow-y: auto; /* Fazla isim geldiğinde kaydırmaya izin ver */
     }
 
     .display-section {
@@ -32,9 +32,11 @@
       display: flex;
       flex-direction: column;
       background: #1e293b;
-      padding: 20px;
+      padding: 15px 20px;
       border-radius: 12px;
       border: 1px solid #334155;
+      min-height: 45%;
+      overflow-y: auto; /* Kendi içinde taşmayı engellemez */
     }
 
     /* Sağ Taraf: Personel / Kontrol Paneli (%35) */
@@ -55,41 +57,42 @@
     body.tv-mode .display-side {
       flex: 100% !important;
       border-right: none !important;
-      padding: 40px !important;
-      gap: 30px !important;
+      padding: 25px !important;
+      gap: 20px !important;
     }
 
-    h1, h2 { color: #38bdf8; margin-bottom: 5px; font-size: 1.4rem; }
-    body.tv-mode h1 { font-size: 2rem; }
+    h1, h2 { color: #38bdf8; margin-bottom: 5px; font-size: 1.3rem; }
+    body.tv-mode h1 { font-size: 1.6rem; }
 
     .queue-container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 8px;
+      margin-top: 8px;
     }
 
+    /* Kompakt Kart Tasarımı (Daha Fazla İsim Sığması İçin) */
     .queue-card {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: #0f172a;
-      padding: 12px 20px;
-      border-radius: 10px;
-      border-left: 6px solid #64748b;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      padding: 8px 16px;
+      border-radius: 8px;
+      border-left: 5px solid #64748b;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .queue-card.active {
       background: #0284c7;
       border-left-color: #4ade80;
-      transform: scale(1.01);
+      transform: scale(1.005);
     }
 
-    .rank { font-size: 1.4rem; font-weight: bold; width: 40px; opacity: 0.8; color: #38bdf8; }
-    .name-area { display: flex; align-items: center; gap: 12px; font-size: 1.8rem; font-weight: 700; flex-grow: 1; }
-    .flag { font-size: 2rem; }
-    .status { font-size: 1.2rem; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 6px; }
+    .rank { font-size: 1.2rem; font-weight: bold; width: 35px; opacity: 0.8; color: #38bdf8; }
+    .name-area { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 700; flex-grow: 1; }
+    .flag { font-size: 1.6rem; }
+    .status { font-size: 1rem; background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 6px; }
 
     /* Kontrol Paneli Elemanları */
     input, select, button {
@@ -168,13 +171,11 @@
 
   <!-- SOL TARAF: İKİ AYRI MÜSABAKA/HAT TV EKRANI -->
   <div class="display-side">
-    <!-- 1. Bölüm (Üst Liste) -->
     <div class="display-section">
       <h1 id="screenTitle1Text">1. MÜSABAKA / HAT EKRANI</h1>
       <div class="queue-container" id="queueList1"></div>
     </div>
 
-    <!-- 2. Bölüm (Alt Liste) -->
     <div class="display-section">
       <h1 id="screenTitle2Text">2. MÜSABAKA / HAT EKRANI</h1>
       <div class="queue-container" id="queueList2"></div>
@@ -185,10 +186,8 @@
   <div class="control-side">
     <h2>Personel Paneli</h2>
 
-    <!-- TV Ekranını Ayrı Pencerede Aç -->
     <button class="btn-tv" type="button" id="btnOpenTV">📺 TV Ekranını Ayrı Pencerede Aç</button>
     
-    <!-- Başlıkları Değiştirme Alanı -->
     <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155;">
       <label style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 2px;">🏷️ 1. Ekran Başlığı:</label>
       <input type="text" id="customTitle1Input" placeholder="1. Hat / Müsabaka Başlığı">
@@ -197,7 +196,6 @@
       <button class="btn-title" type="button" id="btnUpdateTitles">Başlıkları Güncelle</button>
     </div>
 
-    <!-- Excel Yükleme Alanı -->
     <div class="excel-box">
       <label style="font-size: 0.85rem; color: #cbd5e1; display: block; margin-bottom: 4px;">📊 Excel'den Toplu Liste Yükle</label>
       <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
@@ -250,7 +248,6 @@
     <button class="btn-call" type="button" id="btnCallSelected">Seçilenleri Çağır 🔔</button>
   </div>
 
-  <!-- Ses Efekti -->
   <audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
   <script>
@@ -271,9 +268,27 @@
 
     const dingSound = document.getElementById('dingSound');
 
+    function normalizeCountryCode(val) {
+      if (!val) return 'TR';
+      const clean = String(val).trim().toUpperCase();
+      
+      const map = {
+        'TURKEY': 'TR', 'TÜRKIYE': 'TR', 'TURKIYE': 'TR', 'TUR': 'TR',
+        'USA': 'US', 'AMERICA': 'US', 'UNITED STATES': 'US',
+        'GERMANY': 'DE', 'ALMANYA': 'DE', 'DEU': 'DE',
+        'FRANCE': 'FR', 'FRANSA': 'FR', 'FRA': 'FR',
+        'ENGLAND': 'GB', 'UK': 'GB', 'INGILTERE': 'GB', 'İNGİLTERE': 'GB',
+        'AZERBAIJAN': 'AZ', 'AZERBAYCAN': 'AZ', 'AZE': 'AZ',
+        'NETHERLANDS': 'NL', 'HOLLANDA': 'NL', 'NED': 'NL',
+        'ITALY': 'IT', 'ITALYA': 'IT', 'İTALYA': 'IT', 'ITA': 'IT'
+      };
+
+      if (clean.length === 2) return clean;
+      return map[clean] || 'TR';
+    }
+
     function getFlagEmoji(countryCode) {
-      if (!countryCode) return '🏳️';
-      const code = String(countryCode).toUpperCase();
+      const code = normalizeCountryCode(countryCode);
       return code.replace(/./g, char => 
         String.fromCodePoint(127397 + char.charCodeAt(0))
       );
@@ -317,14 +332,14 @@
       if (miniListElement) miniListElement.innerHTML = '';
       if (totalCount) totalCount.textContent = queue.length;
 
-      // 1. Hat / Müsabaka Çağrılanlar
+      // 1. Hat / Müsabaka Çağrılanlar (Kısıtlama olmaksızın tüm çağrılanlar listelenir)
       const calledList1 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '1');
       calledList1.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
 
       if (calledList1.length === 0) {
-        qList1.innerHTML = "<p style='font-size: 1rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
+        qList1.innerHTML = "<p style='font-size: 0.95rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
       } else {
-        calledList1.slice(0, 4).forEach((item, index) => {
+        calledList1.forEach((item, index) => {
           const card = document.createElement('div');
           card.className = `queue-card ${index === 0 ? 'active' : ''}`;
           const flag = getFlagEmoji(item.ulke);
@@ -345,9 +360,9 @@
       calledList2.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
 
       if (calledList2.length === 0) {
-        qList2.innerHTML = "<p style='font-size: 1rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
+        qList2.innerHTML = "<p style='font-size: 0.95rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
       } else {
-        calledList2.slice(0, 4).forEach((item, index) => {
+        calledList2.forEach((item, index) => {
           const card = document.createElement('div');
           card.className = `queue-card ${index === 0 ? 'active' : ''}`;
           const flag = getFlagEmoji(item.ulke);
@@ -363,7 +378,7 @@
         });
       }
 
-      // Sağ Liste (Tüm Bekleyenler)
+      // Sağ Liste
       if (miniListElement) {
         if (queue.length === 0) {
           miniListElement.innerHTML = "<p style='font-size: 0.85rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
@@ -398,7 +413,6 @@
       renderTitles();
       renderUI();
 
-      // Başlıkları Güncelle
       document.getElementById('btnUpdateTitles').addEventListener('click', () => {
         const t1 = document.getElementById('customTitle1Input').value.trim();
         const t2 = document.getElementById('customTitle2Input').value.trim();
@@ -407,13 +421,11 @@
         renderTitles();
       });
 
-      // TV Ekranı Açma
       document.getElementById('btnOpenTV').addEventListener('click', () => {
         const baseUrl = window.location.href.split('?')[0];
         window.open(baseUrl + '?tv=true', '_blank', 'width=1280,height=900,scrollbars=yes,resizable=yes');
       });
 
-      // Kaydet / Güncelle
       document.getElementById('saveBtn').addEventListener('click', () => {
         const editId = document.getElementById('editId').value;
         const nameInput = document.getElementById('personName');
@@ -460,7 +472,6 @@
         document.getElementById('cancelEditBtn').style.display = 'none';
       });
 
-      // Seçilenleri Çağır
       document.getElementById('btnCallSelected').addEventListener('click', () => {
         const checkboxes = document.querySelectorAll('.mini-checkbox:checked');
         if (checkboxes.length === 0) return alert("Lütfen listeden en az bir kişi seçin!");
@@ -485,7 +496,6 @@
         }
       });
 
-      // Silme ve Düzenleme İşlemleri
       document.getElementById('miniList').addEventListener('click', (e) => {
         const editId = e.target.getAttribute('data-edit-id');
         const deleteId = e.target.getAttribute('data-delete-id');
@@ -510,7 +520,6 @@
         }
       });
 
-      // Excel Yükleme (Sütunlar: İsim, Ülke, Müsabaka/Hat)
       document.getElementById('excelFile').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -526,16 +535,21 @@
 
             let addedCount = 0;
             jsonData.forEach(row => {
-              const isim = row.İsim || row.Ad || row.Name || row[Object.keys(row)[0]];
-              const ulke = row.Ülke || row.Ulke || row.Country || "TR";
-              const hat = row.Müsabaka || row.Musabaka || row.Hat || row.Group || "1";
+              const keys = Object.keys(row);
+              const nameKey = keys.find(k => /İsim|Isim|Ad|Name/i.test(k)) || keys[0];
+              const countryKey = keys.find(k => /Ülke|Ulke|Country|Bayrak|Flag/i.test(k));
+              const matchKey = keys.find(k => /Müsabaka|Musabaka|Hat|Group|Match/i.test(k));
+
+              const isim = row[nameKey];
+              const rawUlke = countryKey ? row[countryKey] : "TR";
+              const rawHat = matchKey ? row[matchKey] : "1";
 
               if (isim) {
                 queue.push({
                   id: String(Date.now() + Math.random()),
                   isim: String(isim).trim(),
-                  ulke: String(ulke).trim().toUpperCase(),
-                  matchGroup: String(hat).trim() === "2" ? "2" : "1",
+                  ulke: normalizeCountryCode(rawUlke),
+                  matchGroup: String(rawHat).trim() === "2" ? "2" : "1",
                   banko: "Banko 1",
                   status: 'Bekliyor',
                   calledAt: 0
@@ -555,7 +569,7 @@
       });
     });
 
-    // Sekmeler ve Pencereler Arası Senkronizasyon
+    // Sekmeler Arası Senkronizasyon
     window.addEventListener('storage', (e) => {
       if (e.key === 'siramatik_queue_dual') {
         try {
