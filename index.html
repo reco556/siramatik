@@ -93,11 +93,11 @@
     }
     button:hover { background: #16a34a; }
 
-    .btn-call { background: #3b82f6; }
+    .btn-call { background: #3b82f6; margin-top: 5px; }
     .btn-call:hover { background: #2563eb; }
     
-    .btn-delete { background: #ef4444; padding: 5px 10px; font-size: 0.8rem; width: auto; }
-    .btn-edit { background: #f59e0b; padding: 5px 10px; font-size: 0.8rem; width: auto; color: white; }
+    .btn-delete { background: #ef4444; padding: 5px 8px; font-size: 0.75rem; width: auto; }
+    .btn-edit { background: #f59e0b; padding: 5px 8px; font-size: 0.75rem; width: auto; color: white; }
     .btn-edit:hover { background: #d97706; }
     
     .excel-box {
@@ -123,9 +123,15 @@
       justify-content: space-between;
       align-items: center;
     }
+    .mini-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
     .action-btns {
       display: flex;
-      gap: 5px;
+      gap: 4px;
     }
   </style>
 </head>
@@ -133,9 +139,9 @@
 
   <!-- BARKO / TV EKRANI (SOL) -->
   <div class="display-side">
-    <h1>BEKLEME LİSTESİ</h1>
+    <h1>ÇAĞRILANLAR / BEKLEME LİSTESİ</h1>
     <div class="queue-container" id="queueList">
-      <!-- İlk 6 kişi buraya gelecek -->
+      <!-- Çağrılanlar buraya gelecek -->
     </div>
   </div>
 
@@ -185,7 +191,7 @@
     <h2>Sıradakiler (<span id="totalCount">0</span>)</h2>
     <div class="waiting-list-small" id="miniList"></div>
 
-    <button class="btn-call" onclick="callNext()">Sıradakini Çağır 🔔</button>
+    <button class="btn-call" onclick="callSelected()">Seçilenleri Çağır 🔔</button>
   </div>
 
   <!-- Ses Efekti -->
@@ -215,7 +221,6 @@
       renderUI();
     }
 
-    // Yeni Ekleme veya Güncelleme İşlemi
     function savePerson() {
       const editId = document.getElementById('editId').value;
       const nameInput = document.getElementById('personName');
@@ -225,7 +230,6 @@
       if (!nameInput.value.trim()) return alert("Lütfen bir isim girin!");
 
       if (editId) {
-        // Düzenleme Modu: Var olan kaydı güncelle (Sırası bozulmaz)
         const index = queue.findIndex(item => String(item.id) === String(editId));
         if (index !== -1) {
           queue[index].isim = nameInput.value;
@@ -234,7 +238,6 @@
         }
         cancelEdit();
       } else {
-        // Yeni Kayıt Ekleme
         queue.push({
           id: String(Date.now() + Math.random()),
           isim: nameInput.value,
@@ -248,7 +251,6 @@
       saveData();
     }
 
-    // Düzenleme Modunu Başlat
     function editPerson(id) {
       const item = queue.find(i => String(i.id) === String(id));
       if (!item) return;
@@ -263,7 +265,6 @@
       document.getElementById('cancelEditBtn').style.display = 'block';
     }
 
-    // Düzenlemeyi İptal Et
     function cancelEdit() {
       document.getElementById('editId').value = '';
       document.getElementById('personName').value = '';
@@ -294,84 +295,4 @@
               isim: String(isim),
               ulke: String(ulke).trim().toUpperCase(),
               banko: "Banko 1",
-              status: 'Bekliyor'
-            });
-          }
-        });
-
-        saveData();
-        alert(`${jsonData.length} kişi başarıyla listeye eklendi!`);
-        document.getElementById('excelFile').value = '';
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function callNext() {
-      const waitingIndex = queue.findIndex(item => item.status === 'Bekliyor');
-      if (waitingIndex === -1) return alert("Bekleyen kimse kalmadı!");
-
-      queue[waitingIndex].status = 'Çağrıldı';
-      
-      dingSound.currentTime = 0;
-      dingSound.play().catch(e => console.log("Ses çalma engeli"));
-
-      saveData();
-    }
-
-    function removePerson(id) {
-      queue = queue.filter(item => String(item.id) !== String(id));
-      saveData();
-    }
-
-    function renderUI() {
-      const queueListElement = document.getElementById('queueList');
-      const miniListElement = document.getElementById('miniList');
-      const totalCount = document.getElementById('totalCount');
-      
-      queueListElement.innerHTML = '';
-      miniListElement.innerHTML = '';
-      totalCount.textContent = queue.length;
-
-      if (queue.length === 0) {
-        queueListElement.innerHTML = "<p style='font-size: 1.5rem; opacity: 0.6;'>Şu an bekleyen kimse yok.</p>";
-      }
-
-      const top6 = queue.slice(0, 6);
-      top6.forEach((item, index) => {
-        const card = document.createElement('div');
-        const isActive = item.status === 'Çağrıldı' && index === 0;
-        const flag = getFlagEmoji(item.ulke);
-
-        card.className = `queue-card ${isActive ? 'active' : ''}`;
-        card.innerHTML = `
-          <div class="rank">${index + 1}.</div>
-          <div class="name-area">
-            <span class="flag">${flag}</span>
-            <span>${item.isim}</span>
-          </div>
-          <div class="status">${isActive ? item.banko + ' (Çağrıldı)' : 'Bekliyor'}</div>
-        `;
-        queueListElement.appendChild(card);
-      });
-
-      queue.forEach((item) => {
-        const mini = document.createElement('div');
-        mini.className = 'mini-card';
-        const flag = getFlagEmoji(item.ulke);
-        mini.innerHTML = `
-          <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">
-            ${flag} <b>${item.isim}</b>
-          </span>
-          <div class="action-btns">
-            <button class="btn-edit" onclick="editPerson('${item.id}')">Düzenle</button>
-            <button class="btn-delete" onclick="removePerson('${item.id}')">Sil</button>
-          </div>
-        `;
-        miniListElement.appendChild(mini);
-      });
-    }
-
-    renderUI();
-  </script>
-</body>
-</html>
+              status: 'Bekli
