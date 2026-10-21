@@ -16,7 +16,7 @@
       overflow: hidden;
     }
 
-    /* Sol Taraf: Çift Barko / TV Ekranı (%65) - İki Bölmeli */
+    /* Sol Taraf: Çift Barko / TV Ekranı (%65) */
     .display-side {
       flex: 6.5;
       padding: 20px;
@@ -24,7 +24,7 @@
       flex-direction: column;
       gap: 15px;
       border-right: 2px solid #334155;
-      overflow-y: auto; /* Fazla isim geldiğinde kaydırmaya izin ver */
+      overflow-y: auto;
     }
 
     .display-section {
@@ -36,18 +36,34 @@
       border-radius: 12px;
       border: 1px solid #334155;
       min-height: 45%;
-      overflow-y: auto; /* Kendi içinde taşmayı engellemez */
+      overflow-y: auto;
     }
 
-    /* Sağ Taraf: Personel / Kontrol Paneli (%35) */
+    /* Sağ Taraf: Personel / Kontrol Paneli (%35) - Düzeltilmiş Kaydırma Alanı */
     .control-side {
       flex: 3.5;
       background: #1e293b;
-      padding: 25px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      overflow-y: auto;
+      gap: 10px;
+      height: 100vh;
+      overflow: hidden; /* Dış taşmayı engelle */
+    }
+
+    .control-top {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0; /* Üst kısımların küçülmesini engelle */
+    }
+
+    .control-bottom {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      overflow: hidden; /* Sadece liste alanının kaymasını sağla */
+      gap: 8px;
     }
 
     /* Yalnızca TV Penceresi Modu */
@@ -61,7 +77,7 @@
       gap: 20px !important;
     }
 
-    h1, h2 { color: #38bdf8; margin-bottom: 5px; font-size: 1.3rem; }
+    h1, h2 { color: #38bdf8; margin-bottom: 2px; font-size: 1.2rem; }
     body.tv-mode h1 { font-size: 1.6rem; }
 
     .queue-container {
@@ -71,7 +87,6 @@
       margin-top: 8px;
     }
 
-    /* Kompakt Kart Tasarımı (Daha Fazla İsim Sığması İçin) */
     .queue-card {
       display: flex;
       justify-content: space-between;
@@ -97,9 +112,9 @@
     /* Kontrol Paneli Elemanları */
     input, select, button {
       width: 100%;
-      padding: 8px 10px;
-      font-size: 0.95rem;
-      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.9rem;
+      border-radius: 6px;
       border: none;
       outline: none;
     }
@@ -119,41 +134,48 @@
     }
     button:hover { background: #16a34a; }
 
-    .btn-call { background: #3b82f6; margin-top: 5px; }
+    .btn-call { background: #3b82f6; margin-top: 4px; flex-shrink: 0; }
     .btn-call:hover { background: #2563eb; }
     
-    .btn-tv { background: #8b5cf6; font-size: 0.9rem; }
+    .btn-tv { background: #8b5cf6; font-size: 0.85rem; }
     .btn-tv:hover { background: #7c3aed; }
 
-    .btn-title { background: #0284c7; font-size: 0.85rem; padding: 6px; margin-top: 5px; }
+    .btn-title { background: #0284c7; font-size: 0.8rem; padding: 5px; margin-top: 4px; }
     .btn-title:hover { background: #0369a1; }
 
-    .btn-delete { background: #ef4444; padding: 4px 8px; font-size: 0.75rem; width: auto; }
-    .btn-edit { background: #f59e0b; padding: 4px 8px; font-size: 0.75rem; width: auto; color: white; }
+    .btn-delete { background: #ef4444; padding: 3px 6px; font-size: 0.7rem; width: auto; }
+    .btn-edit { background: #f59e0b; padding: 3px 6px; font-size: 0.7rem; width: auto; color: white; }
     .btn-edit:hover { background: #d97706; }
     
     .excel-box {
-      border: 2px dashed #475569;
-      padding: 10px;
+      border: 1px dashed #475569;
+      padding: 8px;
       text-align: center;
-      border-radius: 8px;
+      border-radius: 6px;
       background: #0f172a;
     }
 
+    /* Sıradakiler Listesi Artık Kendi İçinde Kaydırılabilir */
     .waiting-list-small {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      max-height: 150px;
+      gap: 5px;
       overflow-y: auto;
-    }
-    .mini-card {
+      flex-grow: 1;
       background: #0f172a;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+
+    .mini-card {
+      background: #1e293b;
       padding: 6px 10px;
       border-radius: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
     .mini-left {
       display: flex;
@@ -184,66 +206,70 @@
 
   <!-- SAĞ TARAF: PERSONEL / KONTROL PANELİ -->
   <div class="control-side">
-    <h2>Personel Paneli</h2>
+    <div class="control-top">
+      <h2>Personel Paneli</h2>
 
-    <button class="btn-tv" type="button" id="btnOpenTV">📺 TV Ekranını Ayrı Pencerede Aç</button>
-    
-    <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155;">
-      <label style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 2px;">🏷️ 1. Ekran Başlığı:</label>
-      <input type="text" id="customTitle1Input" placeholder="1. Hat / Müsabaka Başlığı">
-      <label style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-top: 6px; margin-bottom: 2px;">🏷️ 2. Ekran Başlığı:</label>
-      <input type="text" id="customTitle2Input" placeholder="2. Hat / Müsabaka Başlığı">
-      <button class="btn-title" type="button" id="btnUpdateTitles">Başlıkları Güncelle</button>
-    </div>
-
-    <div class="excel-box">
-      <label style="font-size: 0.85rem; color: #cbd5e1; display: block; margin-bottom: 4px;">📊 Excel'den Toplu Liste Yükle</label>
-      <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
-      <small style="font-size: 0.7rem; opacity: 0.7;">(Sütunlar: İsim, Ülke, Müsabaka [1 veya 2])</small>
-    </div>
-
-    <input type="hidden" id="editId" value="">
-
-    <div>
-      <label>Kişi / Ad Soyad:</label>
-      <input type="text" id="personName" placeholder="Örn: Ahmet Yılmaz">
-    </div>
-
-    <div style="display: flex; gap: 8px;">
-      <div style="flex: 1;">
-        <label>Ülke:</label>
-        <select id="countrySelect">
-          <option value="TR">🇹🇷 TR</option>
-          <option value="US">🇺🇸 US</option>
-          <option value="GB">🇬🇧 GB</option>
-          <option value="DE">🇩🇪 DE</option>
-          <option value="FR">🇫🇷 FR</option>
-          <option value="AZ">🇦🇿 AZ</option>
-          <option value="NL">🇳🇱 NL</option>
-          <option value="IT">🇮🇹 IT</option>
-        </select>
+      <button class="btn-tv" type="button" id="btnOpenTV">📺 TV Ekranını Ayrı Pencerede Aç</button>
+      
+      <div style="background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #334155;">
+        <label style="font-size: 0.75rem; color: #cbd5e1; display: block; margin-bottom: 2px;">🏷️ 1. Ekran Başlığı:</label>
+        <input type="text" id="customTitle1Input" placeholder="1. Hat Başlığı">
+        <label style="font-size: 0.75rem; color: #cbd5e1; display: block; margin-top: 4px; margin-bottom: 2px;">🏷️ 2. Ekran Başlığı:</label>
+        <input type="text" id="customTitle2Input" placeholder="2. Hat Başlığı">
+        <button class="btn-title" type="button" id="btnUpdateTitles">Başlıkları Güncelle</button>
       </div>
-      <div style="flex: 1;">
-        <label>Müsabaka/Hat:</label>
-        <select id="matchSelect">
-          <option value="1">1. Müsabaka / Hat</option>
-          <option value="2">2. Müsabaka / Hat</option>
-        </select>
+
+      <div class="excel-box">
+        <label style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 2px;">📊 Excel'den Toplu Liste Yükle</label>
+        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+      </div>
+
+      <input type="hidden" id="editId" value="">
+
+      <div>
+        <label style="font-size:0.85rem;">Kişi / Ad Soyad:</label>
+        <input type="text" id="personName" placeholder="Örn: Ahmet Yılmaz">
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label style="font-size:0.85rem;">Ülke:</label>
+          <select id="countrySelect">
+            <option value="TR">🇹🇷 TR</option>
+            <option value="US">🇺🇸 US</option>
+            <option value="GB">🇬🇧 GB</option>
+            <option value="DE">🇩🇪 DE</option>
+            <option value="FR">🇫🇷 FR</option>
+            <option value="AZ">🇦🇿 AZ</option>
+            <option value="NL">🇳🇱 NL</option>
+            <option value="IT">🇮🇹 IT</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size:0.85rem;">Müsabaka/Hat:</label>
+          <select id="matchSelect">
+            <option value="1">1. Hat</option>
+            <option value="2">2. Hat</option>
+          </select>
+        </div>
+      </div>
+      
+      <div>
+        <label style="font-size:0.85rem;">Banko/Oda:</label>
+        <input type="text" id="counterName" value="Banko 1">
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <button id="saveBtn" type="button" style="flex: 2;">Listeye Ekle</button>
+        <button id="cancelEditBtn" type="button" style="background: #64748b; display: none; flex: 1;">İptal</button>
       </div>
     </div>
-    
-    <div>
-      <label>Atanacak Banko/Oda:</label>
-      <input type="text" id="counterName" value="Banko 1">
+
+    <!-- Kontrol Alt Kısım (Sadece bu alan aşağı kayar) -->
+    <div class="control-bottom">
+      <h2 style="font-size: 1.1rem; margin-top: 5px;">Sıradakiler (<span id="totalCount">0</span>)</h2>
+      <div class="waiting-list-small" id="miniList"></div>
     </div>
-
-    <button id="saveBtn" type="button">Listeye Ekle</button>
-    <button id="cancelEditBtn" type="button" style="background: #64748b; display: none; margin-top: 4px;">İptal</button>
-
-    <hr style="border-color: #334155;">
-
-    <h2>Sıradakiler (<span id="totalCount">0</span>)</h2>
-    <div class="waiting-list-small" id="miniList"></div>
 
     <button class="btn-call" type="button" id="btnCallSelected">Seçilenleri Çağır 🔔</button>
   </div>
@@ -332,7 +358,7 @@
       if (miniListElement) miniListElement.innerHTML = '';
       if (totalCount) totalCount.textContent = queue.length;
 
-      // 1. Hat / Müsabaka Çağrılanlar (Kısıtlama olmaksızın tüm çağrılanlar listelenir)
+      // 1. Hat Çağrılanlar
       const calledList1 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '1');
       calledList1.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
 
@@ -355,7 +381,7 @@
         });
       }
 
-      // 2. Hat / Müsabaka Çağrılanlar
+      // 2. Hat Çağrılanlar
       const calledList2 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '2');
       calledList2.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
 
@@ -378,7 +404,7 @@
         });
       }
 
-      // Sağ Liste
+      // Sağ Liste (Kaydırılabilir Alan)
       if (miniListElement) {
         if (queue.length === 0) {
           miniListElement.innerHTML = "<p style='font-size: 0.85rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
@@ -392,8 +418,8 @@
 
             mini.innerHTML = `
               <div class="mini-left">
-                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 16px; height: 16px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
-                <span style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
+                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 15px; height: 15px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
+                <span style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
                   ${flag} ${item.isim} <span style="opacity:0.7; font-size:0.7rem;">${groupText}</span>
                 </span>
               </div>
@@ -509,7 +535,7 @@
           document.getElementById('matchSelect').value = item.matchGroup || '1';
           document.getElementById('counterName').value = item.banko || 'Banko 1';
 
-          document.getElementById('saveBtn').textContent = 'Güncellemeyi Kaydet';
+          document.getElementById('saveBtn').textContent = 'Güncelle';
           document.getElementById('saveBtn').style.background = '#f59e0b';
           document.getElementById('cancelEditBtn').style.display = 'block';
         }
@@ -569,7 +595,6 @@
       });
     });
 
-    // Sekmeler Arası Senkronizasyon
     window.addEventListener('storage', (e) => {
       if (e.key === 'siramatik_queue_dual') {
         try {
