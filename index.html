@@ -16,7 +16,7 @@
       overflow: hidden;
     }
 
-    /* Sol Taraf: Çift Barko / TV Ekranı (%65) */
+    /* Sol Taraf: Çift Barko / TV Ekranı (%65) - 10+ İsim Sığacak Şekilde */
     .display-side {
       flex: 6.5;
       padding: 10px;
@@ -40,7 +40,7 @@
       overflow: hidden;
     }
 
-    /* Sağ Taraf: Personel / Kontrol Paneli (%35) */
+    /* Sağ Taraf: Personel / Kontrol Paneli (%35) - Kaydırma Korumalı */
     .control-side {
       flex: 3.5;
       background: #1e293b;
@@ -49,22 +49,7 @@
       flex-direction: column;
       gap: 8px;
       height: 100vh;
-      overflow: hidden;
-    }
-
-    .control-top {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .control-bottom {
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-      overflow: hidden;
-      gap: 5px;
+      overflow-y: auto; /* Sağ panelin tamamının rahatça kaydırılabilmesi için */
     }
 
     /* Yalnızca TV Penceresi Modu */
@@ -79,7 +64,7 @@
     }
 
     h1 { color: #38bdf8; margin-bottom: 2px; font-size: 1rem; flex-shrink: 0; }
-    body.tv-mode h1 { font-size: 1.2rem; }
+    body.tv-mode h1 { font-size: 1.4rem; }
 
     .queue-container {
       display: flex;
@@ -138,7 +123,7 @@
     }
     button:hover { background: #16a34a; }
 
-    .btn-call { background: #3b82f6; margin-top: 3px; flex-shrink: 0; }
+    .btn-call { background: #3b82f6; margin-top: 5px; }
     .btn-call:hover { background: #2563eb; }
     
     .btn-tv { background: #8b5cf6; font-size: 0.75rem; }
@@ -166,8 +151,8 @@
       display: flex;
       flex-direction: column;
       gap: 3px;
+      max-height: 180px;
       overflow-y: auto;
-      flex-grow: 1;
       background: #0f172a;
       padding: 5px;
       border-radius: 5px;
@@ -212,73 +197,71 @@
 
   <!-- SAĞ TARAF: PERSONEL / KONTROL PANELİ -->
   <div class="control-side">
-    <div class="control-top">
-      <h2 style="color:#38bdf8; font-size:1rem;">Personel Paneli</h2>
+    <h2 style="color:#38bdf8; font-size:1rem;">Personel Paneli</h2>
 
-      <button class="btn-tv" type="button" onclick="openTVWindow()">📺 TV Ekranını Ayrı Pencerede Aç</button>
-      
-      <div style="background: #0f172a; padding: 5px; border-radius: 5px; border: 1px solid #334155;">
-        <label style="font-size: 0.65rem; color: #cbd5e1; display: block; margin-bottom: 1px;">🏷️ 1. Ekran Başlığı:</label>
-        <input type="text" id="customTitle1Input" placeholder="1. Hat Başlığı">
-        <label style="font-size: 0.65rem; color: #cbd5e1; display: block; margin-top: 2px; margin-bottom: 1px;">🏷️ 2. Ekran Başlığı:</label>
-        <input type="text" id="customTitle2Input" placeholder="2. Hat Başlığı">
-        <button class="btn-title" type="button" onclick="updateTitles()">Başlıkları Güncelle</button>
-      </div>
-
-      <div class="excel-box">
-        <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-bottom: 1px;">📊 Excel'den Toplu Liste Yükle</label>
-        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" onchange="readExcelFile(this)">
-      </div>
-
-      <input type="hidden" id="editId" value="">
-
-      <div>
-        <label style="font-size:0.75rem;">Kişi / Ad Soyad:</label>
-        <input type="text" id="personName" placeholder="Örn: Ahmet Yılmaz">
-      </div>
-
-      <div style="display: flex; gap: 4px;">
-        <div style="flex: 1;">
-          <label style="font-size:0.75rem;">Ülke:</label>
-          <select id="countrySelect">
-            <option value="TR">🇹🇷 TR</option>
-            <option value="US">🇺🇸 US</option>
-            <option value="GB">🇬🇧 GB</option>
-            <option value="DE">🇩🇪 DE</option>
-            <option value="FR">🇫🇷 FR</option>
-            <option value="AZ">🇦🇿 AZ</option>
-            <option value="NL">🇳🇱 NL</option>
-            <option value="IT">🇮🇹 IT</option>
-          </select>
-        </div>
-        <div style="flex: 1;">
-          <label style="font-size:0.75rem;">Müsabaka/Hat:</label>
-          <select id="matchSelect">
-            <option value="1">1. Hat</option>
-            <option value="2">2. Hat</option>
-          </select>
-        </div>
-      </div>
-      
-      <div>
-        <label style="font-size:0.75rem;">Banko/Oda:</label>
-        <input type="text" id="counterName" value="Banko 1">
-      </div>
-
-      <div style="display: flex; gap: 4px;">
-        <button id="saveBtn" type="button" onclick="savePerson()" style="flex: 2;">Listeye Ekle</button>
-        <button id="cancelEditBtn" type="button" onclick="cancelEdit()" style="background: #64748b; display: none; flex: 1;">İptal</button>
-      </div>
+    <button class="btn-tv" type="button" onclick="openTVWindow()">📺 TV Ekranını Ayrı Pencerede Aç</button>
+    
+    <div style="background: #0f172a; padding: 5px; border-radius: 5px; border: 1px solid #334155;">
+      <label style="font-size: 0.65rem; color: #cbd5e1; display: block; margin-bottom: 1px;">🏷️ 1. Ekran Başlığı:</label>
+      <input type="text" id="customTitle1Input" placeholder="1. Hat Başlığı">
+      <label style="font-size: 0.65rem; color: #cbd5e1; display: block; margin-top: 2px; margin-bottom: 1px;">🏷️ 2. Ekran Başlığı:</label>
+      <input type="text" id="customTitle2Input" placeholder="2. Hat Başlığı">
+      <button class="btn-title" type="button" onclick="updateTitles()">Başlıkları Güncelle</button>
     </div>
 
-    <!-- Kontrol Alt Kısım -->
-    <div class="control-bottom">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
-        <h2 style="font-size: 0.9rem; margin: 0; color:#38bdf8;">Sıradakiler (<span id="totalCount">0</span>)</h2>
-        <button class="btn-clear-all" type="button" onclick="clearAllList()">🗑️ Tümünü Sil</button>
-      </div>
-      <div class="waiting-list-small" id="miniList"></div>
+    <div class="excel-box">
+      <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-bottom: 1px;">📊 Excel'den Toplu Liste Yükle</label>
+      <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" onchange="readExcelFile(this)">
     </div>
+
+    <input type="hidden" id="editId" value="">
+
+    <div>
+      <label style="font-size:0.75rem;">Kişi / Ad Soyad:</label>
+      <input type="text" id="personName" placeholder="Örn: Ahmet Yılmaz">
+    </div>
+
+    <div style="display: flex; gap: 4px;">
+      <div style="flex: 1;">
+        <label style="font-size:0.75rem;">Ülke:</label>
+        <select id="countrySelect">
+          <option value="TR">🇹🇷 TR</option>
+          <option value="US">🇺🇸 US</option>
+          <option value="GB">🇬🇧 GB</option>
+          <option value="DE">🇩🇪 DE</option>
+          <option value="FR">🇫🇷 FR</option>
+          <option value="AZ">🇦🇿 AZ</option>
+          <option value="NL">🇳🇱 NL</option>
+          <option value="IT">🇮🇹 IT</option>
+        </select>
+      </div>
+      <div style="flex: 1;">
+        <label style="font-size:0.75rem;">Müsabaka/Hat:</label>
+        <select id="matchSelect">
+          <option value="1">1. Hat</option>
+          <option value="2">2. Hat</option>
+        </select>
+      </div>
+    </div>
+    
+    <div>
+      <label style="font-size:0.75rem;">Banko/Oda:</label>
+      <input type="text" id="counterName" value="Banko 1">
+    </div>
+
+    <div style="display: flex; gap: 4px;">
+      <button id="saveBtn" type="button" onclick="savePerson()" style="flex: 2;">Listeye Ekle</button>
+      <button id="cancelEditBtn" type="button" onclick="cancelEdit()" style="background: #64748b; display: none; flex: 1;">İptal</button>
+    </div>
+
+    <hr style="border-color: #334155; margin: 5px 0;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="font-size: 0.9rem; margin: 0; color:#38bdf8;">Sıradakiler (<span id="totalCount">0</span>)</h2>
+      <button class="btn-clear-all" type="button" onclick="clearAllList()">🗑️ Tümünü Sil</button>
+    </div>
+    
+    <div class="waiting-list-small" id="miniList"></div>
 
     <button class="btn-call" type="button" onclick="callSelected()">Seçilenleri Çağır 🔔</button>
   </div>
@@ -356,4 +339,278 @@
 
     function openTVWindow() {
       const baseUrl = window.location.href.split('?')[0];
-      window.open
+      window.open(baseUrl + '?tv=true', '_blank', 'width=1280,height=900,scrollbars=yes,resizable=yes');
+    }
+
+    function updateTitles() {
+      const t1 = document.getElementById('customTitle1Input').value.trim();
+      const t2 = document.getElementById('customTitle2Input').value.trim();
+      if (t1) localStorage.setItem('siramatik_title_1', t1);
+      if (t2) localStorage.setItem('siramatik_title_2', t2);
+      renderTitles();
+    }
+
+    function clearAllList() {
+      if (queue.length === 0) return alert("Liste zaten boş!");
+      if (confirm("Listedeki tüm kişiler tamamen silinecek. Emin misiniz?")) {
+        queue = [];
+        saveData(true);
+      }
+    }
+
+    function savePerson() {
+      const editId = document.getElementById('editId').value;
+      const nameInput = document.getElementById('personName');
+      const countrySelect = document.getElementById('countrySelect');
+      const matchSelect = document.getElementById('matchSelect');
+      const counterInput = document.getElementById('counterName');
+      
+      const val = nameInput.value.trim();
+      if (!val) return alert("Lütfen bir isim girin!");
+
+      if (editId) {
+        const index = queue.findIndex(item => String(item.id) === String(editId));
+        if (index !== -1) {
+          queue[index].isim = val;
+          queue[index].ulke = countrySelect.value;
+          queue[index].matchGroup = matchSelect.value;
+          queue[index].banko = counterInput.value.trim() || 'Banko 1';
+        }
+        cancelEdit();
+      } else {
+        queue.push({
+          id: String(Date.now() + Math.random()),
+          isim: val,
+          ulke: countrySelect.value,
+          matchGroup: matchSelect.value,
+          banko: counterInput.value.trim() || 'Banko 1',
+          status: 'Bekliyor',
+          calledAt: 0
+        });
+      }
+
+      nameInput.value = '';
+      saveData();
+    }
+
+    function editPerson(id) {
+      const item = queue.find(i => String(i.id) === String(id));
+      if (!item) return;
+      document.getElementById('editId').value = item.id;
+      document.getElementById('personName').value = item.isim;
+      document.getElementById('countrySelect').value = item.ulke || 'TR';
+      document.getElementById('matchSelect').value = item.matchGroup || '1';
+      document.getElementById('counterName').value = item.banko || 'Banko 1';
+
+      const saveBtn = document.getElementById('saveBtn');
+      if (saveBtn) {
+        saveBtn.textContent = 'Güncelle';
+        saveBtn.style.background = '#f59e0b';
+      }
+      document.getElementById('cancelEditBtn').style.display = 'block';
+    }
+
+    function cancelEdit() {
+      document.getElementById('editId').value = '';
+      document.getElementById('personName').value = '';
+      const saveBtn = document.getElementById('saveBtn');
+      if (saveBtn) {
+        saveBtn.textContent = 'Listeye Ekle';
+        saveBtn.style.background = '#22c55e';
+      }
+      document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+
+    function removePerson(id) {
+      queue = queue.filter(item => String(item.id) !== String(id));
+      saveData();
+    }
+
+    function callSelected() {
+      const checkboxes = document.querySelectorAll('.mini-checkbox:checked');
+      if (checkboxes.length === 0) return alert("Lütfen listeden en az bir kişi seçin!");
+
+      let updated = false;
+      let timestamp = Date.now();
+
+      checkboxes.forEach((cb, index) => {
+        const id = cb.getAttribute('data-id');
+        const item = queue.find(i => String(i.id) === String(id));
+        if (item && item.status !== 'Çağrıldı') {
+          item.status = 'Çağrıldı';
+          item.calledAt = timestamp + index;
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        dingSound.currentTime = 0;
+        dingSound.play().catch(e => console.log("Ses engellendi"));
+        saveData(true);
+      }
+    }
+
+    function readExcelFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          if (typeof XLSX === 'undefined') {
+            return alert("Excel kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.");
+          }
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+          let addedCount = 0;
+          jsonData.forEach(row => {
+            const keys = Object.keys(row);
+            const nameKey = keys.find(k => /İsim|Isim|Ad|Name/i.test(k)) || keys[0];
+            const countryKey = keys.find(k => /Ülke|Ulke|Country|Bayrak|Flag/i.test(k));
+            const matchKey = keys.find(k => /Müsabaka|Musabaka|Hat|Group|Match/i.test(k));
+            const counterKey = keys.find(k => /Banko|Oda|Masa|Desk|Room/i.test(k));
+
+            const isim = row[nameKey];
+            const rawUlke = countryKey ? row[countryKey] : "TR";
+            const rawHat = matchKey ? row[matchKey] : "1";
+            const rawBanko = counterKey ? row[counterKey] : "Banko 1";
+
+            if (isim) {
+              queue.push({
+                id: String(Date.now() + Math.random()),
+                isim: String(isim).trim(),
+                ulke: normalizeCountryCode(rawUlke),
+                matchGroup: String(rawHat).trim() === "2" ? "2" : "1",
+                banko: String(rawBanko).trim() || "Banko 1",
+                status: 'Bekliyor',
+                calledAt: 0
+              });
+              addedCount++;
+            }
+          });
+
+          saveData();
+          alert(`${addedCount} kişi başarıyla listeye eklendi!`);
+        } catch (err) {
+          alert("Excel dosyası okunurken hata oluştu.");
+        }
+        input.value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function renderUI() {
+      const qList1 = document.getElementById('queueList1');
+      const qList2 = document.getElementById('queueList2');
+      const miniListElement = document.getElementById('miniList');
+      const totalCount = document.getElementById('totalCount');
+      
+      if (!qList1 || !qList2) return;
+
+      qList1.innerHTML = '';
+      qList2.innerHTML = '';
+      if (miniListElement) miniListElement.innerHTML = '';
+      if (totalCount) totalCount.textContent = queue.length;
+
+      // 1. Hat Çağrılanlar
+      const calledList1 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '1');
+      calledList1.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
+
+      if (calledList1.length === 0) {
+        qList1.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
+      } else {
+        calledList1.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = `queue-card ${index === 0 ? 'active' : ''}`;
+          const flag = getFlagEmoji(item.ulke);
+          card.innerHTML = `
+            <div class="rank">${index + 1}.</div>
+            <div class="name-area">
+              <span class="flag">${flag}</span>
+              <span>${item.isim}</span>
+            </div>
+            <div class="status">${item.banko || 'Banko 1'}</div>
+          `;
+          qList1.appendChild(card);
+        });
+      }
+
+      // 2. Hat Çağrılanlar
+      const calledList2 = queue.filter(item => item.status === 'Çağrıldı' && String(item.matchGroup || '1') === '2');
+      calledList2.sort((a, b) => (a.calledAt || 0) - (b.calledAt || 0));
+
+      if (calledList2.length === 0) {
+        qList2.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6;'>Bu hatta çağrılan kimse yok.</p>";
+      } else {
+        calledList2.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = `queue-card ${index === 0 ? 'active' : ''}`;
+          const flag = getFlagEmoji(item.ulke);
+          card.innerHTML = `
+            <div class="rank">${index + 1}.</div>
+            <div class="name-area">
+              <span class="flag">${flag}</span>
+              <span>${item.isim}</span>
+            </div>
+            <div class="status">${item.banko || 'Banko 1'}</div>
+          `;
+          qList2.appendChild(card);
+        });
+      }
+
+      // Sağ Liste
+      if (miniListElement) {
+        if (queue.length === 0) {
+          miniListElement.innerHTML = "<p style='font-size: 0.75rem; opacity: 0.6; text-align:center;'>Liste boş.</p>";
+        } else {
+          queue.forEach((item) => {
+            const mini = document.createElement('div');
+            mini.className = 'mini-card';
+            const flag = getFlagEmoji(item.ulke);
+            const isCalled = item.status === 'Çağrıldı';
+            const groupText = `[Hat ${item.matchGroup || 1} - ${item.banko || 'Banko 1'}]`;
+
+            mini.innerHTML = `
+              <div class="mini-left">
+                <input type="checkbox" class="mini-checkbox" data-id="${item.id}" style="width: 13px; height: 13px; cursor: pointer;" ${isCalled ? 'checked' : ''}>
+                <span style="font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; ${isCalled ? 'color: #4ade80; font-weight: bold;' : ''}">
+                  ${flag} ${item.isim} <span style="opacity:0.7; font-size:0.55rem;">${groupText}</span>
+                </span>
+              </div>
+              <div class="action-btns">
+                <button class="btn-edit" type="button" onclick="editPerson('${item.id}')">Düzenle</button>
+                <button class="btn-delete" type="button" onclick="removePerson('${item.id}')">Sil</button>
+              </div>
+            `;
+            miniListElement.appendChild(mini);
+          });
+        }
+      }
+    }
+
+    // İlk Yüklemede Ekranı Çiz
+    renderTitles();
+    renderUI();
+
+    // Sekmeler Arası Canlı Veri Dinleme
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'siramatik_queue_dual') {
+        try {
+          queue = JSON.parse(e.newValue) || [];
+          renderUI();
+        } catch(err) {}
+      }
+      if (e.key === 'siramatik_title_1' || e.key === 'siramatik_title_2') {
+        renderTitles();
+      }
+      if (e.key === 'siramatik_play_sound_dual' && isTVMode) {
+        dingSound.currentTime = 0;
+        dingSound.play().catch(e => console.log("Ses oynatma izni bekleniyor"));
+      }
+    });
+  </script>
+</body>
+</html>
